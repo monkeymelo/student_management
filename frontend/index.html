@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>学生管理系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>学生管理系统</h1>
+
+      <section class="card">
+        <div class="section-header">
+          <h2>学生列表</h2>
+          <button id="create-student-btn">新增学生</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>姓名</th>
+              <th>课程种类</th>
+              <th>报课次数</th>
+              <th>总金额</th>
+              <th>已上课次数</th>
+              <th>剩余课时</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="student-tbody"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>签到记录查询</h2>
+        <form id="attendance-filter-form" class="inline-form">
+          <label>学生
+            <select id="filter-student-id" name="student_id">
+              <option value="">全部</option>
+            </select>
+          </label>
+          <label>开始日期
+            <input type="date" id="filter-start-date" name="start_date" />
+          </label>
+          <label>结束日期
+            <input type="date" id="filter-end-date" name="end_date" />
+          </label>
+          <button type="submit">查询</button>
+        </form>
+        <table>
+          <thead>
+            <tr>
+              <th>学生</th>
+              <th>日期</th>
+              <th>时间</th>
+              <th>内容</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-tbody"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <dialog id="student-dialog">
+      <form method="dialog" id="student-form">
+        <h3 id="student-form-title">新增学生</h3>
+        <input type="hidden" id="student-id" />
+        <label>姓名
+          <input id="name" name="name" required maxlength="30" />
+          <small class="error" data-error-for="name"></small>
+        </label>
+        <label>性别
+          <select id="gender" name="gender" required>
+            <option value="">请选择</option>
+            <option value="male">男</option>
+            <option value="female">女</option>
+            <option value="other">其他</option>
+          </select>
+          <small class="error" data-error-for="gender"></small>
+        </label>
+        <label>年龄
+          <input id="age" name="age" type="number" min="1" max="120" required />
+          <small class="error" data-error-for="age"></small>
+        </label>
+        <label>课程种类
+          <input id="course_type" name="course_type" required maxlength="50" />
+          <small class="error" data-error-for="course_type"></small>
+        </label>
+        <label>报课次数
+          <input id="enroll_count" name="enroll_count" type="number" min="1" max="1000" required />
+          <small class="error" data-error-for="enroll_count"></small>
+        </label>
+        <label>总金额
+          <input id="total_amount" name="total_amount" type="number" min="0" max="9999999" step="0.01" required />
+          <small class="error" data-error-for="total_amount"></small>
+        </label>
+
+        <p id="student-form-server-error" class="error"></p>
+        <menu>
+          <button type="button" id="cancel-student-btn">取消</button>
+          <button type="submit">保存</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="checkin-dialog">
+      <form method="dialog" id="checkin-form">
+        <h3>学生签到</h3>
+        <input type="hidden" id="checkin-student-id" />
+        <label>上课日期
+          <input id="checkin-date" name="date" type="date" required />
+          <small class="error" data-error-for="date"></small>
+        </label>
+        <label>上课时间
+          <input id="checkin-time" name="time" type="time" required />
+          <small class="error" data-error-for="time"></small>
+        </label>
+        <label>上课内容
+          <input id="checkin-content" name="content" required maxlength="80" />
+          <small class="error" data-error-for="content"></small>
+        </label>
+
+        <p id="checkin-form-server-error" class="error"></p>
+        <menu>
+          <button type="button" id="cancel-checkin-btn">取消</button>
+          <button type="submit">提交签到</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

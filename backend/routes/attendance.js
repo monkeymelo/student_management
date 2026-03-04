@@ -1,9 +1,8 @@
 const express = require('express');
 const { AttendanceService, AttendanceServiceError } = require('../services/attendance_service');
-const { InMemoryRepository } = require('../services/in_memory_repository');
+const { repository } = require('../services/data_store');
 
 const router = express.Router();
-const repository = new InMemoryRepository();
 const attendanceService = new AttendanceService(repository);
 
 // 签到（新增一条上课记录）
@@ -34,26 +33,9 @@ router.post('/check-in', async (req, res) => {
 
 // 查询签到列表
 router.get('/', async (req, res) => {
-  // TODO: list attendance records
-  return res.status(501).json({ message: 'TODO: list attendance records' });
-});
-
-// 查询单条签到记录
-router.get('/:id', async (req, res) => {
-  // TODO: get attendance by id
-  return res.status(501).json({ message: 'TODO: get attendance by id' });
-});
-
-// 更新签到记录
-router.put('/:id', async (req, res) => {
-  // TODO: update attendance
-  return res.status(501).json({ message: 'TODO: update attendance' });
-});
-
-// 删除签到记录
-router.delete('/:id', async (req, res) => {
-  // TODO: delete attendance
-  return res.status(501).json({ message: 'TODO: delete attendance' });
+  const { student_id, start_date, end_date } = req.query;
+  const records = await repository.listAttendances({ student_id, start_date, end_date });
+  return res.json({ code: 'OK', data: records });
 });
 
 module.exports = router;
