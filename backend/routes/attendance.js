@@ -1,10 +1,35 @@
 const express = require('express');
+const { AttendanceService, AttendanceServiceError } = require('../services/attendance_service');
+const { InMemoryRepository } = require('../services/in_memory_repository');
+
 const router = express.Router();
+const repository = new InMemoryRepository();
+const attendanceService = new AttendanceService(repository);
 
 // 签到（新增一条上课记录）
 router.post('/check-in', async (req, res) => {
-  // TODO: check-in student attendance
-  return res.status(501).json({ message: 'TODO: check-in student attendance' });
+  const { student_id, date, time, content } = req.body;
+
+  try {
+    const result = await attendanceService.checkIn(student_id, date, time, content);
+    return res.status(201).json({
+      code: 'OK',
+      message: '签到成功',
+      data: result
+    });
+  } catch (error) {
+    if (error instanceof AttendanceServiceError) {
+      return res.status(error.status).json({
+        code: error.code,
+        message: error.message
+      });
+    }
+
+    return res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: '服务器内部错误'
+    });
+  }
 });
 
 // 查询签到列表
