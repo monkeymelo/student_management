@@ -1,0 +1,18 @@
+:root { font-family: Arial, sans-serif; color: #222; }
+body { margin: 0; background: #f6f7fb; }
+.container { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+.card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.section-header { display: flex; justify-content: space-between; align-items: center; }
+.inline-form { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-bottom: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+button { border: 1px solid #2e6df6; background: #2e6df6; color: #fff; border-radius: 4px; padding: 6px 12px; cursor: pointer; }
+button.secondary { background: #fff; color: #2e6df6; }
+button[disabled] { border-color: #b4b8c5; background: #d0d3db; color: #6e7381; cursor: not-allowed; }
+menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; margin-top: 12px; }
+.error { color: #c62828; min-height: 16px; margin: 0; font-size: 12px; }
+dialog { border: none; border-radius: 8px; width: 380px; box-shadow: 0 8px 30px rgba(0,0,0,.2); }
+dialog form { display: flex; flex-direction: column; gap: 8px; }
+.action-group { display: flex; gap: 8px; }
+.empty { color: #777; text-align: center; }

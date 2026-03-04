@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const studentsRouter = require('../routes/students');
 const attendanceRouter = require('../routes/attendance');
 
@@ -11,6 +12,16 @@ app.get('/health', (req, res) => {
 
 app.use('/api/students', studentsRouter);
 app.use('/api/attendance', attendanceRouter);
+
+const frontendPath = path.resolve(__dirname, '../../frontend');
+app.use(express.static(frontendPath));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  return res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
