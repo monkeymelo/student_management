@@ -3,68 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>学生管理系统</title>
+    <title>一期一绘学生管理系统</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="container">
-      <h1>学生管理系统</h1>
+    <header class="topbar">
+      <h1>一期一绘学生管理系统</h1>
+    </header>
 
-      <section class="card">
-        <div class="section-header">
+    <main class="container">
+      <section id="list-page" class="page active">
+        <div class="page-header">
           <h2>学生列表</h2>
-          <button id="create-student-btn">新增学生</button>
+          <div class="actions">
+            <input id="search-input" type="search" placeholder="搜索姓名或课程种类..." />
+            <button id="create-student-btn" type="button">录入学生</button>
+          </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>姓名</th>
-              <th>课程种类</th>
-              <th>报课次数</th>
-              <th>总金额</th>
-              <th>已上课次数</th>
-              <th>剩余课时</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="student-tbody"></tbody>
-        </table>
+
+        <div id="student-list" class="student-list"></div>
       </section>
 
-      <section class="card">
-        <h2>签到记录查询</h2>
-        <form id="attendance-filter-form" class="inline-form">
-          <label>学生
-            <select id="filter-student-id" name="student_id">
-              <option value="">全部</option>
-            </select>
-          </label>
-          <label>开始日期
-            <input type="date" id="filter-start-date" name="start_date" />
-          </label>
-          <label>结束日期
-            <input type="date" id="filter-end-date" name="end_date" />
-          </label>
-          <button type="submit">查询</button>
-        </form>
-        <table>
-          <thead>
-            <tr>
-              <th>学生</th>
-              <th>日期</th>
-              <th>时间</th>
-              <th>内容</th>
-            </tr>
-          </thead>
-          <tbody id="attendance-tbody"></tbody>
-        </table>
+      <section id="detail-page" class="page">
+        <button id="back-btn" class="link-btn" type="button">← 返回列表</button>
+
+        <article class="card" id="student-detail-card"></article>
+
+        <section class="card">
+          <h3>签到记录</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>时间</th>
+                <th>课程内容</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-tbody"></tbody>
+          </table>
+        </section>
       </section>
     </main>
 
     <dialog id="student-dialog">
       <form method="dialog" id="student-form">
-        <h3 id="student-form-title">新增学生</h3>
-        <input type="hidden" id="student-id" />
+        <h3>录入学生</h3>
         <label>姓名
           <input id="name" name="name" required maxlength="30" />
           <small class="error" data-error-for="name"></small>
@@ -86,7 +69,7 @@
           <input id="course_type" name="course_type" required maxlength="50" />
           <small class="error" data-error-for="course_type"></small>
         </label>
-        <label>报课次数
+        <label>报课总数
           <input id="enroll_count" name="enroll_count" type="number" min="1" max="1000" required />
           <small class="error" data-error-for="enroll_count"></small>
         </label>
@@ -97,7 +80,7 @@
 
         <p id="student-form-server-error" class="error"></p>
         <menu>
-          <button type="button" id="cancel-student-btn">取消</button>
+          <button type="button" id="cancel-student-btn" class="secondary">取消</button>
           <button type="submit">保存</button>
         </menu>
       </form>
@@ -105,7 +88,7 @@
 
     <dialog id="checkin-dialog">
       <form method="dialog" id="checkin-form">
-        <h3>学生签到</h3>
+        <h3>上课签到</h3>
         <input type="hidden" id="checkin-student-id" />
         <label>上课日期
           <input id="checkin-date" name="date" type="date" required />
@@ -115,14 +98,14 @@
           <input id="checkin-time" name="time" type="time" required />
           <small class="error" data-error-for="time"></small>
         </label>
-        <label>上课内容
+        <label>课程内容
           <input id="checkin-content" name="content" required maxlength="80" />
           <small class="error" data-error-for="content"></small>
         </label>
 
         <p id="checkin-form-server-error" class="error"></p>
         <menu>
-          <button type="button" id="cancel-checkin-btn">取消</button>
+          <button type="button" id="cancel-checkin-btn" class="secondary">取消</button>
           <button type="submit">提交签到</button>
         </menu>
       </form>
