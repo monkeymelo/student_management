@@ -25,6 +25,10 @@ const masterTimetableContainer = document.getElementById('master-timetable');
 const checkinDialog = document.getElementById('checkin-dialog');
 const checkinForm = document.getElementById('checkin-form');
 const cancelCheckinBtn = document.getElementById('cancel-checkin-btn');
+const batchCheckinDialog = document.getElementById('batch-checkin-dialog');
+const batchCheckinForm = document.getElementById('batch-checkin-form');
+const cancelBatchCheckinBtn = document.getElementById('cancel-batch-checkin-btn');
+const batchStudentList = document.getElementById('batch-student-list');
 
 const renewDialog = document.getElementById('renew-dialog');
 const renewForm = document.getElementById('renew-form');
@@ -384,18 +388,51 @@ function renderMasterTimetable() {
               <button
                 type="button"
                 class="secondary timetable-checkin-btn"
-                data-slot="${card.weekday}|${escapeHtml(card.time_slot)}"
                 data-weekday="${card.weekday}"
                 data-start-time="${escapeHtml(String(card.start_time || '').slice(0, 5))}"
-                data-student-id="${card.students[0] ? card.students[0].id : ''}"
-              >去签到 / 本节点名</button>
-              <p class="signed-today-placeholder">今日已签到：待接入</p>
+                data-end-time="${escapeHtml(String(card.end_time || '').slice(0, 5))}"
+              >批量签到</button>
+              <p class="signed-today-placeholder">今日已签到：${card.today_checked_in || 0}人</p>
             </article>
           `).join('') : '<div class="empty">无时段</div>'}
         </div>
       </section>
     `;
   }).join('');
+}
+
+
+function validateBatchCheckinForm(data) {
+  const errors = {};
+  if (!data.session_date) errors.session_date = '上课日期为必填项';
+  return errors;
+}
+
+async function openBatchCheckinDialog({ weekday, startTime, endTime }) {
+  const json = await apiFetch(`/api/timetable/due-students?weekday=${weekday}&start_time=${startTime}&end_time=${endTime}`);
+  const dueStudents = json.data || [];
+
+  if (!dueStudents.length) {
+    window.alert('当前时段暂无应到学生');
+    return;
+  }
+
+  document.getElementById('batch-weekday').value = String(weekday);
+  document.getElementById('batch-start-time').value = String(startTime);
+  document.getElementById('batch-end-time').value = String(endTime);
+  document.getElementById('batch-session-date').valueAsDate = new Date();
+  document.getElementById('batch-class-content').value = '';
+  setErrors(batchCheckinForm, {});
+  document.getElementById('batch-checkin-form-server-error').textContent = '';
+
+  batchStudentList.innerHTML = dueStudents.map((student) => `
+    <label class="batch-student-item">
+      <input type="checkbox" name="present_student_ids" value="${student.id}" checked />
+      <span>${escapeHtml(student.name)}</span>
+    </label>
+  `).join('');
+
+  batchCheckinDialog.showModal();
 }
 
 async function loadMasterTimetable() {
@@ -464,6 +501,7 @@ addCourseTypeBtn.addEventListener('click', () => {
   newCourseTypeInput.value = '';
 });
 cancelCheckinBtn.addEventListener('click', () => checkinDialog.close());
+cancelBatchCheckinBtn.addEventListener('click', () => batchCheckinDialog.close());
 cancelRenewBtn.addEventListener('click', () => renewDialog.close());
 cancelRemarkBtn.addEventListener('click', () => remarkDialog.close());
 
@@ -539,24 +577,19 @@ detailCard.addEventListener('click', async (event) => {
 
 
 
-masterTimetableContainer.addEventListener('click', (event) => {
+masterTimetableContainer.addEventListener('click', async (event) => {
   const checkinBtn = event.target.closest('.timetable-checkin-btn');
   if (!checkinBtn) return;
 
-  const studentId = Number(checkinBtn.dataset.studentId);
-  if (!studentId) {
-    window.alert('当前时段暂无可签到学生');
-    return;
+  try {
+    await openBatchCheckinDialog({
+      weekday: Number(checkinBtn.dataset.weekday),
+      startTime: checkinBtn.dataset.startTime,
+      endTime: checkinBtn.dataset.endTime
+    });
+  } catch (error) {
+    window.alert(error.message || '打开批量签到失败');
   }
-
-  document.getElementById('checkin-student-id').value = String(studentId);
-  document.getElementById('checkin-date').valueAsDate = new Date();
-  document.getElementById('checkin-time').value = checkinBtn.dataset.startTime || '18:00';
-  document.getElementById('checkin-content').value = '';
-  checkinForm.dataset.slotKey = checkinBtn.dataset.slot || '';
-  setErrors(checkinForm, {});
-  document.getElementById('checkin-form-server-error').textContent = '';
-  checkinDialog.showModal();
 });
 
 attendanceTbody.addEventListener('click', async (event) => {
@@ -616,6 +649,40 @@ checkinForm.addEventListener('submit', async (event) => {
     await openDetailPage(payload.student_id);
   } catch (error) {
     document.getElementById('checkin-form-server-error').textContent = error.message || '签到失败';
+  }
+});
+
+
+batchCheckinForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const formData = Object.fromEntries(new FormData(batchCheckinForm).entries());
+  const errors = validateBatchCheckinForm(formData);
+  setErrors(batchCheckinForm, errors);
+  if (Object.keys(errors).length) return;
+
+  const selectedIds = Array.from(batchCheckinForm.querySelectorAll('input[name="present_student_ids"]:checked')).map((node) => Number(node.value));
+
+  const payload = {
+    session_date: formData.session_date,
+    weekday: Number(formData.weekday),
+    start_time: `${formData.start_time}:00`,
+    end_time: `${formData.end_time}:00`,
+    present_student_ids: selectedIds,
+    class_content: String(formData.class_content || '').trim()
+  };
+
+  try {
+    const response = await apiFetch('/api/attendance/batch-check-in', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    batchCheckinDialog.close();
+    await loadStudents();
+    await loadMasterTimetable();
+    window.alert(`批量签到完成：成功 ${response.data.success_count} 人，跳过 ${response.data.skipped.length} 人，失败 ${response.data.failed.length} 人`);
+  } catch (error) {
+    document.getElementById('batch-checkin-form-server-error').textContent = error.message || '批量签到失败';
   }
 });
 
