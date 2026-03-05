@@ -111,6 +111,28 @@
       </form>
     </dialog>
 
+
+    <dialog id="renew-dialog">
+      <form method="dialog" id="renew-form">
+        <h3>学生续费</h3>
+        <input type="hidden" id="renew-student-id" />
+        <label>续费金额
+          <input id="renew-amount" name="amount" type="number" min="0.01" max="9999999" step="0.01" required />
+          <small class="error" data-error-for="amount"></small>
+        </label>
+        <label>续课次数
+          <input id="renew-enroll-count" name="enroll_count" type="number" min="1" max="1000" required />
+          <small class="error" data-error-for="enroll_count"></small>
+        </label>
+
+        <p id="renew-form-server-error" class="error"></p>
+        <menu>
+          <button type="button" id="cancel-renew-btn" class="secondary">取消</button>
+          <button type="submit">确认续费</button>
+        </menu>
+      </form>
+    </dialog>
+
     <script type="module" src="./main.js"></script>
   </body>
 </html>
