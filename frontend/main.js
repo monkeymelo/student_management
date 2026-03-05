@@ -337,7 +337,7 @@ async function openDetailPage(studentId) {
     </div>
   `;
 
-  const records = await apiFetch(`/api/attendance?student_id=${selectedStudentId}`);
+  const records = await apiFetch(`/api/attendance?student_id=${selectedStudentId}&status=present`);
   renderAttendances(records.data);
 }
 

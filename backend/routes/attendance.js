@@ -84,8 +84,8 @@ router.delete('/:id', async (req, res) => {
 
 // 查询签到列表
 router.get('/', async (req, res) => {
-  const { student_id, start_date, end_date } = req.query;
-  const records = await repository.listAttendances({ student_id, start_date, end_date });
+  const { student_id, start_date, end_date, status } = req.query;
+  const records = await repository.listAttendances({ student_id, start_date, end_date, status });
   return res.json({ code: 'OK', data: records });
 });
 

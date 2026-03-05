@@ -96,15 +96,7 @@ class BatchCheckInService {
 
         const isPresent = presentStudentIds.includes(studentId);
         if (!isPresent) {
-          await tx.createAttendance({
-            student_id: studentId,
-            session_id: session.id,
-            class_date: sessionDate,
-            class_time: startTime,
-            class_content: classContent,
-            status: 'absent'
-          });
-          skipped.push({ student_id: studentId, reason: '未勾选，记为缺席' });
+          skipped.push({ student_id: studentId, reason: '未勾选，已跳过签到' });
           summaries.push({
             student_id: studentId,
             name: lockedStudent.name,

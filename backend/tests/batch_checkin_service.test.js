@@ -81,7 +81,7 @@ class FakeRepository {
   }
 }
 
-test('批量签到：创建 session，出勤扣课时，未勾选记缺席，课时不足进入失败列表', async () => {
+test('批量签到：创建 session，出勤扣课时，未勾选跳过不记缺席，课时不足进入失败列表', async () => {
   const repository = new FakeRepository();
   const service = new BatchCheckInService(repository);
 
@@ -106,8 +106,36 @@ test('批量签到：创建 session，出勤扣课时，未勾选记缺席，课
   assert.equal(student1.remaining_lessons, 1);
 
   assert.equal(repository.classSessions.length, 1);
-  assert.equal(repository.attendances.length, 2);
-  assert.equal(repository.attendances.some((row) => row.student_id === 3 && row.status === 'absent'), true);
+  assert.equal(repository.attendances.length, 1);
+  assert.equal(repository.attendances.some((row) => row.student_id === 3), false);
+});
+
+
+test('批量签到：未勾选学生不扣课时且不产生签到记录，并返回课时统计', async () => {
+  const repository = new FakeRepository();
+  const service = new BatchCheckInService(repository);
+
+  const result = await service.batchCheckIn({
+    session_date: '2026-03-02',
+    weekday: 1,
+    start_time: '18:00',
+    end_time: '19:00',
+    present_student_ids: [1],
+    class_content: '色彩构成'
+  });
+
+  const student3 = repository.students.get(3);
+  assert.equal(student3.attended_count, 2);
+  assert.equal(student3.remaining_lessons, 3);
+  assert.equal(repository.attendances.some((row) => row.student_id === 3), false);
+
+  const summary3 = result.lesson_summaries.find((item) => item.student_id === 3);
+  assert.deepEqual(summary3, {
+    student_id: 3,
+    name: '王五',
+    attended_count: 2,
+    remaining_lessons: 3
+  });
 });
 
 
