@@ -55,17 +55,30 @@ class BatchCheckInService {
       throw new BatchCheckInServiceError('INVALID_ARGUMENT', 'present_student_ids 必须为数组', 400);
     }
 
+    const existedSession = await this.repository.findClassSessionBySlot(sessionDate, weekday, startTime, endTime);
+    if (existedSession) {
+      throw new BatchCheckInServiceError('SESSION_ALREADY_CHECKED_IN', '该时段今日已完成签到，请勿重复提交', 409);
+    }
+
     return this.repository.transaction(async (tx) => {
       const dueStudents = await tx.getDueStudentsForSlot(weekday, startTime, endTime);
       const dueStudentMap = new Map(dueStudents.map((student) => [Number(student.id), student]));
 
-      const session = await tx.createClassSession({
-        session_date: sessionDate,
-        weekday,
-        start_time: startTime,
-        end_time: endTime,
-        class_content: classContent
-      });
+      let session;
+      try {
+        session = await tx.createClassSession({
+          session_date: sessionDate,
+          weekday,
+          start_time: startTime,
+          end_time: endTime,
+          class_content: classContent
+        });
+      } catch (error) {
+        if (error && error.code === 'SESSION_ALREADY_EXISTS') {
+          throw new BatchCheckInServiceError('SESSION_ALREADY_CHECKED_IN', '该时段今日已完成签到，请勿重复提交', 409);
+        }
+        throw error;
+      }
 
       const success = [];
       const skipped = [];

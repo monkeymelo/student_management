@@ -106,3 +106,85 @@
 ## DELETE /api/attendance/:id
 
 删除一条签到记录，并回滚学生课时统计。
+
+## POST /api/attendance/batch-check-in
+
+批量签到接口（按 `session_date + weekday + start_time + end_time` 唯一确定一个课堂会话）。
+
+- 后端会拒绝同一时段重复签到。
+- 若重复提交，返回 `409 SESSION_ALREADY_CHECKED_IN`，前端应提示“该时段今日已签到”，避免再次提交。
+
+### 请求体示例
+
+```json
+{
+  "session_date": "2026-03-01",
+  "weekday": 1,
+  "start_time": "18:00:00",
+  "end_time": "19:00:00",
+  "present_student_ids": [1, 3, 5],
+  "class_content": "静物素描"
+}
+```
+
+### 成功响应（201）
+
+```json
+{
+  "code": "OK",
+  "message": "批量签到成功",
+  "data": {
+    "session": {
+      "id": 10,
+      "session_date": "2026-03-01",
+      "weekday": 1,
+      "start_time": "18:00:00",
+      "end_time": "19:00:00",
+      "class_content": "静物素描"
+    },
+    "success_count": 2,
+    "success": [{ "student_id": 1, "name": "张三" }],
+    "skipped": [{ "student_id": 7, "reason": "不在该时段应到名单中，已跳过" }],
+    "failed": [{ "student_id": 2, "reason": "课时已用完" }]
+  }
+}
+```
+
+### 重复提交响应（409）
+
+```json
+{
+  "code": "SESSION_ALREADY_CHECKED_IN",
+  "message": "该时段今日已完成签到，请勿重复提交"
+}
+```
+
+## GET /api/timetable/master
+
+返回全局课表。每个时段包含“今日签到状态”字段：
+
+- `today_checked_in`: 今日该时段已签到人数（`present` 计数）。
+- `today_has_session`: 今日该时段是否已发起过批量签到（true/false）。
+
+### 响应示例
+
+```json
+{
+  "code": "OK",
+  "data": [
+    {
+      "weekday": 1,
+      "time_slot": "18:00-19:00",
+      "start_time": "18:00:00",
+      "end_time": "19:00:00",
+      "student_count": 3,
+      "today_checked_in": 2,
+      "today_has_session": true,
+      "students": [
+        { "id": 2, "name": "李四" },
+        { "id": 1, "name": "张三" }
+      ]
+    }
+  ]
+}
+```

@@ -27,6 +27,7 @@ test('聚合全局课表：按 weekday + time_slot 分组并统计人数', async
     end_time: '19:00:00',
     student_count: 2,
     today_checked_in: 0,
+    today_has_session: false,
     students: [
       { id: 2, name: '李四' },
       { id: 1, name: '张三' }
@@ -35,5 +36,27 @@ test('聚合全局课表：按 weekday + time_slot 分组并统计人数', async
   assert.equal(result[1].weekday, 2);
   assert.equal(result[1].student_count, 1);
   assert.equal(result[1].today_checked_in, 0);
+  assert.equal(result[1].today_has_session, false);
   assert.equal(result[1].students[0].name, '王五');
+});
+
+test('聚合全局课表：返回 today_has_session=true 以标记今日时段已签到', async () => {
+  const today = new Date();
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const weekday = today.getDay() === 0 ? 7 : today.getDay();
+
+  const repository = new InMemoryRepository({
+    students: [
+      { id: 1, name: '张三', gender: 'male', age: 12, course_type: '创想课', enroll_count: 10, total_amount: 2000, attended_count: 1, remaining_lessons: 9 }
+    ],
+    schedules: [
+      { student_id: 1, weekday, start_time: '18:00:00', end_time: '19:00:00' }
+    ],
+    class_sessions: [
+      { id: 1, session_date: todayIso, weekday, start_time: '18:00:00', end_time: '19:00:00', class_content: '' }
+    ]
+  });
+
+  const result = await repository.getMasterTimetable();
+  assert.equal(result[0].today_has_session, true);
 });

@@ -39,9 +39,27 @@ class FakeRepository {
   }
 
   async createClassSession(payload) {
+    const existed = await this.findClassSessionBySlot(payload.session_date, payload.weekday, payload.start_time, payload.end_time);
+    if (existed) {
+      const error = new Error('SESSION_ALREADY_EXISTS');
+      error.code = 'SESSION_ALREADY_EXISTS';
+      throw error;
+    }
+
     const row = { id: this.nextSessionId++, ...payload };
     this.classSessions.push(row);
     return { ...row };
+  }
+
+  async findClassSessionBySlot(sessionDate, weekday, startTime, endTime) {
+    const found = this.classSessions.find((row) => (
+      row.session_date === sessionDate
+      && Number(row.weekday) === Number(weekday)
+      && row.start_time === startTime
+      && row.end_time === endTime
+    ));
+
+    return found ? { ...found } : null;
   }
 
   async lockAndGetStudent(studentId) {
@@ -90,4 +108,31 @@ test('批量签到：创建 session，出勤扣课时，未勾选记缺席，课
   assert.equal(repository.classSessions.length, 1);
   assert.equal(repository.attendances.length, 2);
   assert.equal(repository.attendances.some((row) => row.student_id === 3 && row.status === 'absent'), true);
+});
+
+
+test('批量签到：同一日期时段重复提交，返回 SESSION_ALREADY_CHECKED_IN', async () => {
+  const repository = new FakeRepository();
+  const service = new BatchCheckInService(repository);
+
+  await service.batchCheckIn({
+    session_date: '2026-03-01',
+    weekday: 1,
+    start_time: '18:00',
+    end_time: '19:00',
+    present_student_ids: [1],
+    class_content: '速写'
+  });
+
+  await assert.rejects(
+    () => service.batchCheckIn({
+      session_date: '2026-03-01',
+      weekday: 1,
+      start_time: '18:00',
+      end_time: '19:00',
+      present_student_ids: [1],
+      class_content: '速写'
+    }),
+    (error) => error.code === 'SESSION_ALREADY_CHECKED_IN' && error.status === 409
+  );
 });
