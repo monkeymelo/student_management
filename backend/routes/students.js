@@ -5,6 +5,11 @@ const router = express.Router();
 
 const ALLOWED_GENDERS = new Set(['male', 'female', 'other']);
 
+function sanitizeRemark(value) {
+  if (typeof value !== 'string') return '';
+  return value.trim();
+}
+
 function validateStudentPayload(payload) {
   const errors = {};
 
@@ -35,6 +40,11 @@ function validateStudentPayload(payload) {
     errors.total_amount = '总金额需在 0-9999999';
   }
 
+  const remark = sanitizeRemark(payload.remark);
+  if (remark.length > 500) {
+    errors.remark = '备注长度不能超过 500';
+  }
+
   return {
     valid: Object.keys(errors).length === 0,
     errors,
@@ -44,7 +54,8 @@ function validateStudentPayload(payload) {
       age,
       course_type: String(payload.course_type || '').trim(),
       enroll_count: enrollCount,
-      total_amount: totalAmount
+      total_amount: totalAmount,
+      remark
     }
   };
 }
@@ -61,6 +72,7 @@ function validateRenewPayload(payload) {
   if (!Number.isInteger(enrollCount) || enrollCount <= 0 || enrollCount > 1000) {
     errors.enroll_count = '续课次数需在 1-1000';
   }
+
 
   return {
     valid: Object.keys(errors).length === 0,
@@ -112,6 +124,32 @@ router.put('/:id', async (req, res) => {
   }
 
   return res.json({ code: 'OK', data: student });
+});
+
+
+// 更新备注
+router.put('/:id/remark', async (req, res) => {
+  const remark = sanitizeRemark(req.body?.remark);
+  if (remark.length > 500) {
+    return res.status(400).json({ code: 'VALIDATION_ERROR', errors: { remark: '备注长度不能超过 500' } });
+  }
+
+  const current = await repository.getStudentById(req.params.id);
+  if (!current) {
+    return res.status(404).json({ code: 'STUDENT_NOT_FOUND', message: '学生不存在' });
+  }
+
+  const student = await repository.updateStudent(req.params.id, {
+    name: current.name,
+    gender: current.gender,
+    age: Number(current.age),
+    course_type: current.course_type,
+    enroll_count: Number(current.enroll_count),
+    total_amount: Number(current.total_amount),
+    remark
+  });
+
+  return res.json({ code: 'OK', data: student, message: '备注已更新' });
 });
 
 // 学生续费/续课

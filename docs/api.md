@@ -100,5 +100,39 @@
 {
   "code": "STUDENT_NOT_FOUND",
   "message": "学生不存在"
+## PUT /api/students/:id/remark
+
+仅更新学生备注，避免与基础资料更新耦合。
+
+### 请求体
+
+```json
+{
+  "remark": "家长反馈：本周希望增加节奏训练。"
+}
+```
+
+### 成功响应（200）
+
+```json
+{
+  "code": "OK",
+  "message": "备注已更新",
+  "data": {
+    "id": 1,
+    "name": "张三",
+    "remark": "家长反馈：本周希望增加节奏训练。"
+  }
+}
+```
+
+### 失败响应：参数错误（400）
+
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "errors": {
+    "remark": "备注长度不能超过 500"
+  }
 }
 ```

@@ -239,4 +239,22 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 
 .danger-ghost-btn:hover {
   background: #fef2f2;
+.detail-remark-btn {
+  border-color: #0ea5e9;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+#remark-dialog {
+  width: 520px;
+}
+
+#remark-form textarea {
+  resize: vertical;
+  min-height: 160px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-family: inherit;
 }

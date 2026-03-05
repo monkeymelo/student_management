@@ -159,6 +159,24 @@
       </form>
     </dialog>
 
+
+    <dialog id="remark-dialog">
+      <form method="dialog" id="remark-form">
+        <h3>学生备注</h3>
+        <input type="hidden" id="remark-student-id" />
+        <label>备注内容
+          <textarea id="remark-content" name="remark" maxlength="500" rows="8" placeholder="请输入备注内容（最多 500 字）"></textarea>
+          <small class="error" data-error-for="remark"></small>
+        </label>
+
+        <p id="remark-form-server-error" class="error"></p>
+        <menu>
+          <button type="button" id="cancel-remark-btn" class="secondary">取消</button>
+          <button type="submit">保存备注</button>
+        </menu>
+      </form>
+    </dialog>
+
     <script type="module" src="./main.js"></script>
   </body>
 </html>
