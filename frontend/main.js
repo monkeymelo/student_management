@@ -101,7 +101,7 @@ function renderScheduleRow(schedule = {}) {
     <input class="schedule-start-time" type="time" step="60" aria-label="开始时间" />
     <span class="schedule-separator">-</span>
     <input class="schedule-end-time" type="time" step="60" aria-label="结束时间" />
-    <button type="button" class="danger-ghost-btn schedule-remove-btn">删除</button>
+    <button type="button" class="danger-ghost-btn schedule-remove-btn" aria-label="删除时段" title="删除时段">✕</button>
   `;
 
   row.querySelector('.schedule-weekday').value = String(schedule.weekday || '1');
