@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS attendances (
   student_id INTEGER NOT NULL,
   class_date DATE NOT NULL,
   class_time TIME NOT NULL,
-  class_content TEXT NOT NULL,
+  class_content TEXT,
   signed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_attendance_student
