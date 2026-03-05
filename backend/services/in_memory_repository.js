@@ -313,7 +313,29 @@ class InMemoryRepository {
     return { ...updated };
   }
 
-  async getMasterTimetable() {
+  toDateIso(dateInput) {
+    const date = new Date(dateInput);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+
+  getWeekStartMonday(dateInput) {
+    const date = new Date(dateInput);
+    date.setHours(0, 0, 0, 0);
+    const day = date.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    date.setDate(date.getDate() + diff);
+    return date;
+  }
+
+  getDateByWeekday(weekStartInput, weekday) {
+    const weekStart = new Date(weekStartInput);
+    weekStart.setHours(0, 0, 0, 0);
+    const target = new Date(weekStart);
+    target.setDate(weekStart.getDate() + (Number(weekday) - 1));
+    return this.toDateIso(target);
+  }
+
+  async getMasterTimetable(weekStartParam) {
     const grouped = new Map();
 
     this.schedules.forEach((schedule) => {
@@ -340,14 +362,18 @@ class InMemoryRepository {
       }
     });
 
-    const today = new Date();
-    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const baseDate = weekStartParam ? new Date(weekStartParam) : new Date();
+    const currentWeekStart = this.getWeekStartMonday(baseDate);
 
-    const values = await Promise.all(Array.from(grouped.values()).map(async (item) => ({
-      ...item,
-      today_checked_in: await this.countPresentBySlotAndDate(todayIso, item.weekday, item.start_time, item.end_time),
-      today_has_session: Boolean(await this.findClassSessionBySlot(todayIso, item.weekday, item.start_time, item.end_time))
-    })));
+    const values = await Promise.all(Array.from(grouped.values()).map(async (item) => {
+      const sessionDate = this.getDateByWeekday(currentWeekStart, item.weekday);
+      return {
+        ...item,
+        session_date: sessionDate,
+        checked_in_count: await this.countPresentBySlotAndDate(sessionDate, item.weekday, item.start_time, item.end_time),
+        has_session: Boolean(await this.findClassSessionBySlot(sessionDate, item.weekday, item.start_time, item.end_time))
+      };
+    }));
 
     return values
       .map((item) => ({

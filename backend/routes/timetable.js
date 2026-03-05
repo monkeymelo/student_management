@@ -6,7 +6,7 @@ const router = express.Router();
 const batchCheckInService = new BatchCheckInService(repository);
 
 router.get('/master', async (req, res) => {
-  const data = await repository.getMasterTimetable();
+  const data = await repository.getMasterTimetable(req.query.week_start);
   return res.json({ code: 'OK', data });
 });
 
