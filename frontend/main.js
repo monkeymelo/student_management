@@ -1,3 +1,5 @@
+import { WEEKDAY_VALUES, getDateByWeekday, getResetWeekStartForToday, getWeekRangeText, getWeekStartForToday, getWeekStartMonday, getWeekdayHeaderText, formatDateIso } from './week_utils.mjs';
+
 const listPage = document.getElementById('list-page');
 const detailPage = document.getElementById('detail-page');
 const masterTimetablePage = document.getElementById('master-timetable-page');
@@ -21,6 +23,10 @@ const addCourseTypeBtn = document.getElementById('add-course-type-btn');
 const addScheduleBtn = document.getElementById('add-schedule-btn');
 const scheduleList = document.getElementById('schedule-list');
 const masterTimetableContainer = document.getElementById('master-timetable');
+const masterPrevWeekBtn = document.getElementById('master-prev-week-btn');
+const masterTodayBtn = document.getElementById('master-today-btn');
+const masterNextWeekBtn = document.getElementById('master-next-week-btn');
+const masterWeekRange = document.getElementById('master-week-range');
 
 const checkinDialog = document.getElementById('checkin-dialog');
 const checkinForm = document.getElementById('checkin-form');
@@ -54,7 +60,7 @@ const WEEKDAY_OPTIONS = [
 ];
 
 
-const WEEKDAY_VALUES = [1, 2, 3, 4, 5, 6, 7];
+let currentWeekStart = getWeekStartForToday();
 
 function escapeHtml(text) {
   return String(text)
@@ -359,6 +365,8 @@ function renderAttendances(records) {
 
 
 function renderMasterTimetable() {
+  masterWeekRange.textContent = getWeekRangeText(currentWeekStart);
+
   if (!masterTimetable.length) {
     masterTimetableContainer.innerHTML = '<div class="empty">暂无排课数据</div>';
     return;
@@ -374,9 +382,10 @@ function renderMasterTimetable() {
 
   masterTimetableContainer.innerHTML = WEEKDAY_VALUES.map((weekday) => {
     const cards = (byWeekday.get(weekday) || []).sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
+    const sessionDate = getDateByWeekday(currentWeekStart, weekday);
     return `
       <section class="weekday-column">
-        <h3>${weekdayText(weekday)}</h3>
+        <h3>${getWeekdayHeaderText(currentWeekStart, weekday, weekdayText(weekday))}</h3>
         <div class="weekday-cards">
           ${cards.length ? cards.map((card) => `
             <article class="timetable-card">
@@ -387,13 +396,14 @@ function renderMasterTimetable() {
               </ul>
               <button
                 type="button"
-                class="secondary timetable-checkin-btn ${card.today_has_session ? 'is-checked-in' : ''}"
+                class="secondary timetable-checkin-btn ${card.has_session ? 'is-checked-in' : ''}"
                 data-weekday="${card.weekday}"
                 data-start-time="${escapeHtml(String(card.start_time || '').slice(0, 5))}"
                 data-end-time="${escapeHtml(String(card.end_time || '').slice(0, 5))}"
-                data-checked-in="${card.today_has_session ? 'true' : 'false'}"
-              >${card.today_has_session ? '今日已签到' : '批量签到'}</button>
-              <p class="signed-today-placeholder">今日已签到：${card.today_checked_in || 0}人</p>
+                data-session-date="${sessionDate}"
+                data-checked-in="${card.has_session ? 'true' : 'false'}"
+              >${card.has_session ? '本周该日已签到' : '批量签到'}</button>
+              <p class="signed-today-placeholder">本周该日已签到：${card.checked_in_count || 0}人</p>
             </article>
           `).join('') : '<div class="empty">无时段</div>'}
         </div>
@@ -409,7 +419,7 @@ function validateBatchCheckinForm(data) {
   return errors;
 }
 
-async function openBatchCheckinDialog({ weekday, startTime, endTime }) {
+async function openBatchCheckinDialog({ weekday, startTime, endTime, sessionDate }) {
   const json = await apiFetch(`/api/timetable/due-students?weekday=${weekday}&start_time=${startTime}&end_time=${endTime}`);
   const dueStudents = json.data || [];
 
@@ -421,7 +431,7 @@ async function openBatchCheckinDialog({ weekday, startTime, endTime }) {
   document.getElementById('batch-weekday').value = String(weekday);
   document.getElementById('batch-start-time').value = String(startTime);
   document.getElementById('batch-end-time').value = String(endTime);
-  document.getElementById('batch-session-date').valueAsDate = new Date();
+  document.getElementById('batch-session-date').value = sessionDate;
   document.getElementById('batch-class-content').value = '';
   setErrors(batchCheckinForm, {});
   document.getElementById('batch-checkin-form-server-error').textContent = '';
@@ -437,7 +447,8 @@ async function openBatchCheckinDialog({ weekday, startTime, endTime }) {
 }
 
 async function loadMasterTimetable() {
-  const json = await apiFetch('/api/timetable/master');
+  const weekStart = formatDateIso(currentWeekStart);
+  const json = await apiFetch(`/api/timetable/master?week_start=${weekStart}`);
   masterTimetable = json.data;
   renderMasterTimetable();
 }
@@ -447,6 +458,25 @@ async function loadStudents() {
   students = json.data;
   renderStudents();
 }
+
+masterPrevWeekBtn.addEventListener('click', async () => {
+  const next = new Date(currentWeekStart);
+  next.setDate(next.getDate() - 7);
+  currentWeekStart = getWeekStartMonday(next);
+  await loadMasterTimetable();
+});
+
+masterTodayBtn.addEventListener('click', async () => {
+  currentWeekStart = getResetWeekStartForToday();
+  await loadMasterTimetable();
+});
+
+masterNextWeekBtn.addEventListener('click', async () => {
+  const next = new Date(currentWeekStart);
+  next.setDate(next.getDate() + 7);
+  currentWeekStart = getWeekStartMonday(next);
+  await loadMasterTimetable();
+});
 
 searchInput.addEventListener('input', (event) => {
   keyword = event.target.value;
@@ -582,7 +612,7 @@ masterTimetableContainer.addEventListener('click', async (event) => {
   const checkinBtn = event.target.closest('.timetable-checkin-btn');
   if (!checkinBtn) return;
   if (checkinBtn.dataset.checkedIn === 'true') {
-    window.alert('该时段今日已签到，请勿重复提交');
+    window.alert('该时段本周该日已签到，请勿重复提交');
     return;
   }
 
@@ -590,7 +620,8 @@ masterTimetableContainer.addEventListener('click', async (event) => {
     await openBatchCheckinDialog({
       weekday: Number(checkinBtn.dataset.weekday),
       startTime: checkinBtn.dataset.startTime,
-      endTime: checkinBtn.dataset.endTime
+      endTime: checkinBtn.dataset.endTime,
+      sessionDate: checkinBtn.dataset.sessionDate
     });
   } catch (error) {
     window.alert(error.message || '打开批量签到失败');
@@ -688,7 +719,7 @@ batchCheckinForm.addEventListener('submit', async (event) => {
     window.alert(`批量签到完成：成功 ${response.data.success_count} 人，跳过 ${response.data.skipped.length} 人，失败 ${response.data.failed.length} 人`);
   } catch (error) {
     if (error.code === 'SESSION_ALREADY_CHECKED_IN') {
-      document.getElementById('batch-checkin-form-server-error').textContent = '该时段今日已签到，请勿重复提交';
+      document.getElementById('batch-checkin-form-server-error').textContent = '该时段本周该日已签到，请勿重复提交';
       await loadMasterTimetable();
       return;
     }

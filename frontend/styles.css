@@ -57,6 +57,21 @@ body { margin: 0; background: #f5f7fb; }
 
 .actions { display: flex; gap: 10px; }
 
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.week-range {
+  margin-left: 6px;
+  font-size: 14px;
+  color: #334155;
+  font-weight: 600;
+}
+
+
 input[type='search'],
 input,
 select {
