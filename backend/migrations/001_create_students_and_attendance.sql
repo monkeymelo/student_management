@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS students (
   total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00 CHECK (total_amount >= 0),
   attended_count INTEGER NOT NULL DEFAULT 0 CHECK (attended_count >= 0),
   remaining_lessons INTEGER NOT NULL DEFAULT 0 CHECK (remaining_lessons >= 0),
+  remark TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
