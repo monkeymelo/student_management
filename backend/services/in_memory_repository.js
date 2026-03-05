@@ -116,6 +116,22 @@ class InMemoryRepository {
     return { ...attendance };
   }
 
+
+  async getAttendanceById(id) {
+    const attendance = this.attendances.find((record) => Number(record.id) === Number(id));
+    return attendance ? { ...attendance } : null;
+  }
+
+  async deleteAttendance(id) {
+    const index = this.attendances.findIndex((record) => Number(record.id) === Number(id));
+    if (index === -1) {
+      return null;
+    }
+
+    const [deleted] = this.attendances.splice(index, 1);
+    return { ...deleted };
+  }
+
   async listAttendances(filters = {}) {
     const { student_id, start_date, end_date } = filters;
     return this.attendances

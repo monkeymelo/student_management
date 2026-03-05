@@ -227,6 +227,18 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 18px; }
 .empty { color: #64748b; text-align: center; padding: 24px; }
 
+
+.danger-ghost-btn {
+  background: #fff;
+  color: #dc2626;
+  border-color: #fecaca;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+.danger-ghost-btn:hover {
+  background: #fef2f2;
 .detail-remark-btn {
   border-color: #0ea5e9;
   background: #e0f2fe;

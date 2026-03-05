@@ -33,6 +33,22 @@ class FakeRepository {
     return { ...row };
   }
 
+
+  async getAttendanceById(id) {
+    const row = this.attendances.find((attendance) => attendance.id === Number(id));
+    return row ? { ...row } : null;
+  }
+
+  async deleteAttendance(id) {
+    const index = this.attendances.findIndex((attendance) => attendance.id === Number(id));
+    if (index === -1) {
+      return null;
+    }
+
+    const [row] = this.attendances.splice(index, 1);
+    return { ...row };
+  }
+
   async updateStudentLessonStats(studentId, nextValues) {
     const id = Number(studentId);
     const student = this.students.get(id);
@@ -99,4 +115,38 @@ test('并发签到不会扣成负数：仅允许一次成功', async () => {
   assert.equal(repository.students.get(3).remaining_lessons, 0);
   assert.equal(repository.students.get(3).attended_count, 1);
   assert.equal(repository.attendances.length, 1);
+});
+
+
+test('删除签到成功后回滚统计：已上减1，剩余加1', async () => {
+  const repository = new FakeRepository([
+    { id: 4, enroll_count: 10, attended_count: 4, remaining_lessons: 6 }
+  ]);
+  const service = new AttendanceService(repository);
+
+  const created = await service.checkIn(4, '2026-01-05', '15:00:00', '人物速写');
+  const deleted = await service.deleteAttendance(created.attendance.id);
+
+  assert.equal(deleted.attendance.id, created.attendance.id);
+  assert.equal(deleted.student.completed_lessons, 4);
+  assert.equal(deleted.student.remaining_lessons, 6);
+  assert.equal(repository.attendances.length, 0);
+  assert.equal(repository.students.get(4).attended_count, 4);
+  assert.equal(repository.students.get(4).remaining_lessons, 6);
+});
+
+test('删除不存在签到记录时返回可识别错误码', async () => {
+  const repository = new FakeRepository([
+    { id: 5, enroll_count: 12, attended_count: 1, remaining_lessons: 11 }
+  ]);
+  const service = new AttendanceService(repository);
+
+  await assert.rejects(
+    () => service.deleteAttendance(9999),
+    (error) => {
+      assert.equal(error.code, 'ATTENDANCE_NOT_FOUND');
+      assert.equal(error.message, '签到记录不存在');
+      return true;
+    }
+  );
 });

@@ -31,6 +31,31 @@ router.post('/check-in', async (req, res) => {
   }
 });
 
+
+// 删除签到记录
+router.delete('/:id', async (req, res) => {
+  try {
+    const result = await attendanceService.deleteAttendance(req.params.id);
+    return res.json({
+      code: 'OK',
+      message: '删除成功',
+      data: result
+    });
+  } catch (error) {
+    if (error instanceof AttendanceServiceError) {
+      return res.status(error.status).json({
+        code: error.code,
+        message: error.message
+      });
+    }
+
+    return res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: '服务器内部错误'
+    });
+  }
+});
+
 // 查询签到列表
 router.get('/', async (req, res) => {
   const { student_id, start_date, end_date } = req.query;
