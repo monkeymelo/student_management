@@ -392,3 +392,35 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   background: #dcfce7;
   border: 1px dashed #86efac;
 }
+
+#batch-checkin-dialog {
+  width: 520px;
+}
+
+.batch-students-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.batch-students-section p {
+  margin: 0 0 8px;
+  color: #334155;
+  font-size: 14px;
+}
+
+.batch-student-list {
+  display: grid;
+  gap: 6px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.batch-student-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #f8fafc;
+}

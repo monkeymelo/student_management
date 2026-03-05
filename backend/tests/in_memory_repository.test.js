@@ -26,6 +26,7 @@ test('聚合全局课表：按 weekday + time_slot 分组并统计人数', async
     start_time: '18:00:00',
     end_time: '19:00:00',
     student_count: 2,
+    today_checked_in: 0,
     students: [
       { id: 2, name: '李四' },
       { id: 1, name: '张三' }
@@ -33,5 +34,6 @@ test('聚合全局课表：按 weekday + time_slot 分组并统计人数', async
   });
   assert.equal(result[1].weekday, 2);
   assert.equal(result[1].student_count, 1);
+  assert.equal(result[1].today_checked_in, 0);
   assert.equal(result[1].students[0].name, '王五');
 });

@@ -3,9 +3,11 @@ class InMemoryRepository {
     this.students = new Map();
     this.attendances = [];
     this.schedules = [];
+    this.classSessions = [];
     this.studentId = 1;
     this.attendanceId = 1;
     this.scheduleId = 1;
+    this.classSessionId = 1;
     this._tx = Promise.resolve();
 
     this._bootstrap(initialData);
@@ -15,6 +17,7 @@ class InMemoryRepository {
     const students = initialData.students || [];
     const attendances = initialData.attendances || [];
     const schedules = initialData.schedules || [];
+    const classSessions = initialData.class_sessions || [];
 
     students.forEach((student) => {
       const id = Number(student.id) || this.studentId++;
@@ -41,8 +44,24 @@ class InMemoryRepository {
         student_id: Number(attendance.student_id),
         class_date: attendance.class_date,
         class_time: attendance.class_time,
+        status: attendance.status || 'present',
+        session_id: attendance.session_id ? Number(attendance.session_id) : null,
         class_content: attendance.class_content,
         signed_at: attendance.signed_at || new Date().toISOString()
+      });
+    });
+
+    classSessions.forEach((session) => {
+      const id = Number(session.id) || this.classSessionId++;
+      this.classSessionId = Math.max(this.classSessionId, id + 1);
+      this.classSessions.push({
+        id,
+        session_date: session.session_date,
+        weekday: Number(session.weekday),
+        start_time: session.start_time,
+        end_time: session.end_time,
+        class_content: session.class_content || '',
+        created_at: session.created_at || new Date().toISOString()
       });
     });
 
@@ -130,10 +149,58 @@ class InMemoryRepository {
     const attendance = {
       id: this.attendanceId++,
       ...payload,
+      status: payload.status || 'present',
+      session_id: payload.session_id ? Number(payload.session_id) : null,
       signed_at: new Date().toISOString()
     };
     this.attendances.push(attendance);
     return { ...attendance };
+  }
+
+  async createClassSession(payload) {
+    const row = {
+      id: this.classSessionId++,
+      ...payload,
+      class_content: payload.class_content || '',
+      created_at: new Date().toISOString()
+    };
+    this.classSessions.push(row);
+    return { ...row };
+  }
+
+  async getDueStudentsForSlot(weekday, startTime, endTime) {
+    const dueStudentIds = this.schedules
+      .filter((record) => (
+        Number(record.weekday) === Number(weekday)
+          && String(record.start_time).slice(0, 8) === String(startTime).slice(0, 8)
+          && String(record.end_time).slice(0, 8) === String(endTime).slice(0, 8)
+      ))
+      .map((record) => Number(record.student_id));
+
+    const uniqueIds = Array.from(new Set(dueStudentIds));
+    return uniqueIds
+      .map((id) => this.students.get(id))
+      .filter(Boolean)
+      .map((student) => ({ ...student }));
+  }
+
+  async countPresentBySlotAndDate(sessionDate, weekday, startTime, endTime) {
+    const sessionIds = this.classSessions
+      .filter((session) => (
+        String(session.session_date) === String(sessionDate)
+        && Number(session.weekday) === Number(weekday)
+        && String(session.start_time).slice(0, 8) === String(startTime).slice(0, 8)
+        && String(session.end_time).slice(0, 8) === String(endTime).slice(0, 8)
+      ))
+      .map((session) => Number(session.id));
+
+    if (!sessionIds.length) {
+      return 0;
+    }
+
+    return this.attendances.filter((attendance) => (
+      sessionIds.includes(Number(attendance.session_id)) && attendance.status === 'present'
+    )).length;
   }
 
 
@@ -168,8 +235,8 @@ class InMemoryRepository {
         return true;
       })
       .sort((a, b) => {
-        if (a.class_date === b.class_date) {
-          return a.class_time.localeCompare(b.class_time);
+      if (a.class_date === b.class_date) {
+        return a.class_time.localeCompare(b.class_time);
         }
         return a.class_date.localeCompare(b.class_date);
       })
@@ -246,7 +313,15 @@ class InMemoryRepository {
       }
     });
 
-    return Array.from(grouped.values())
+    const today = new Date();
+    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    const values = await Promise.all(Array.from(grouped.values()).map(async (item) => ({
+      ...item,
+      today_checked_in: await this.countPresentBySlotAndDate(todayIso, item.weekday, item.start_time, item.end_time)
+    })));
+
+    return values
       .map((item) => ({
         ...item,
         students: item.students.sort((a, b) => String(a.name).localeCompare(String(b.name), 'zh-Hans-CN'))

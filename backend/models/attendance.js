@@ -7,6 +7,8 @@ const AttendanceFields = {
   studentId: 'INTEGER NOT NULL',
   classDate: 'DATE NOT NULL',
   classTime: 'TIME NOT NULL',
+  sessionId: 'INTEGER',
+  status: "VARCHAR(20) NOT NULL DEFAULT 'present'",
   classContent: 'TEXT',
   signedAt: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP',
   createdAt: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'

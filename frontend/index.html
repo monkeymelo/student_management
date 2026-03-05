@@ -156,6 +156,34 @@
     </dialog>
 
 
+    <dialog id="batch-checkin-dialog">
+      <form method="dialog" id="batch-checkin-form">
+        <h3>批量签到</h3>
+        <input type="hidden" id="batch-weekday" name="weekday" />
+        <input type="hidden" id="batch-start-time" name="start_time" />
+        <input type="hidden" id="batch-end-time" name="end_time" />
+        <label>上课日期
+          <input id="batch-session-date" name="session_date" type="date" required />
+          <small class="error" data-error-for="session_date"></small>
+        </label>
+        <label>课程内容（可选）
+          <input id="batch-class-content" name="class_content" maxlength="80" placeholder="例如：色彩构图训练" />
+        </label>
+
+        <div class="batch-students-section">
+          <p>应到学生（默认全选）</p>
+          <div id="batch-student-list" class="batch-student-list"></div>
+        </div>
+
+        <p id="batch-checkin-form-server-error" class="error"></p>
+        <menu>
+          <button type="button" id="cancel-batch-checkin-btn" class="secondary">取消</button>
+          <button type="submit">提交批量签到</button>
+        </menu>
+      </form>
+    </dialog>
+
+
     <dialog id="renew-dialog">
       <form method="dialog" id="renew-form">
         <h3>学生续费</h3>

@@ -1,9 +1,11 @@
 const express = require('express');
 const { AttendanceService, AttendanceServiceError } = require('../services/attendance_service');
+const { BatchCheckInService, BatchCheckInServiceError } = require('../services/batch_checkin_service');
 const { repository } = require('../services/data_store');
 
 const router = express.Router();
 const attendanceService = new AttendanceService(repository);
+const batchCheckInService = new BatchCheckInService(repository);
 
 // 签到（新增一条上课记录）
 router.post('/check-in', async (req, res) => {
@@ -32,6 +34,30 @@ router.post('/check-in', async (req, res) => {
 });
 
 
+
+
+router.post('/batch-check-in', async (req, res) => {
+  try {
+    const result = await batchCheckInService.batchCheckIn(req.body || {});
+    return res.status(201).json({
+      code: 'OK',
+      message: '批量签到成功',
+      data: result
+    });
+  } catch (error) {
+    if (error instanceof BatchCheckInServiceError) {
+      return res.status(error.status).json({
+        code: error.code,
+        message: error.message
+      });
+    }
+
+    return res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: '服务器内部错误'
+    });
+  }
+});
 // 删除签到记录
 router.delete('/:id', async (req, res) => {
   try {
