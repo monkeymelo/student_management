@@ -154,8 +154,12 @@ button[disabled] {
   border: none;
   color: #dc2626;
   padding: 0;
-  font-size: 34px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.delete-icon {
+  color: #dc2626;
 }
 
 .detail-top {
@@ -213,6 +217,10 @@ label { display: flex; flex-direction: column; gap: 4px; }
 
 .inline-row input {
   flex: 1;
+}
+
+.hidden {
+  display: none;
 }
 
 table { width: 100%; border-collapse: collapse; }

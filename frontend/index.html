@@ -30,7 +30,18 @@
       <section id="detail-page" class="page">
         <div class="detail-toolbar">
           <button id="back-btn" class="link-btn" type="button">← 返回列表</button>
-          <button id="top-delete-btn" class="text-danger-btn" type="button"><span class="icon" aria-hidden="true">🗑</span>删除学生</button>
+          <button id="top-delete-btn" class="text-danger-btn" type="button">
+            <span class="icon delete-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 10v6" />
+                <path d="M14 10v6" />
+              </svg>
+            </span>
+            删除学生
+          </button>
         </div>
 
         <article class="card" id="student-detail-card"></article>
@@ -75,8 +86,9 @@
           <select id="course_type" name="course_type" required>
             <option value="创想课" selected>创想课</option>
             <option value="大师课">大师课</option>
+            <option value="__add_new__">+ 添加新课程种类</option>
           </select>
-          <div class="inline-row">
+          <div class="inline-row hidden" id="new-course-type-row">
             <input id="new-course-type" maxlength="50" placeholder="添加新的课程种类" />
             <button type="button" id="add-course-type-btn" class="secondary">添加</button>
           </div>
@@ -108,7 +120,7 @@
           <small class="error" data-error-for="date"></small>
         </label>
         <label>上课时间
-          <input id="checkin-time" name="time" type="time" required />
+          <input id="checkin-time" name="time" type="time" step="60" required />
           <small class="error" data-error-for="time"></small>
         </label>
         <label>课程内容
