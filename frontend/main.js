@@ -13,6 +13,7 @@ const studentDialog = document.getElementById('student-dialog');
 const studentForm = document.getElementById('student-form');
 const cancelStudentBtn = document.getElementById('cancel-student-btn');
 const courseTypeSelect = document.getElementById('course_type');
+const newCourseTypeRow = document.getElementById('new-course-type-row');
 const newCourseTypeInput = document.getElementById('new-course-type');
 const addCourseTypeBtn = document.getElementById('add-course-type-btn');
 
@@ -66,6 +67,9 @@ function validateCheckinForm(data) {
   const errors = {};
   if (!data.date) errors.date = '日期为必填项';
   if (!data.time) errors.time = '时间为必填项';
+  if (data.time && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.time)) {
+    errors.time = '请输入24小时制时间（例如 18:00）';
+  }
   return errors;
 }
 
@@ -129,6 +133,8 @@ function openListPage() {
 function openStudentDialog() {
   studentForm.reset();
   courseTypeSelect.value = '创想课';
+  newCourseTypeRow.classList.add('hidden');
+  newCourseTypeInput.value = '';
   setErrors(studentForm, {});
   document.getElementById('student-form-server-error').textContent = '';
   studentDialog.showModal();
@@ -210,6 +216,16 @@ topListBtn.addEventListener('click', () => openListPage());
 
 cancelStudentBtn.addEventListener('click', () => studentDialog.close());
 
+courseTypeSelect.addEventListener('change', () => {
+  if (courseTypeSelect.value === '__add_new__') {
+    newCourseTypeRow.classList.remove('hidden');
+    newCourseTypeInput.focus();
+    return;
+  }
+
+  newCourseTypeRow.classList.add('hidden');
+});
+
 addCourseTypeBtn.addEventListener('click', () => {
   const value = newCourseTypeInput.value.trim();
   if (!value) return;
@@ -219,10 +235,11 @@ addCourseTypeBtn.addEventListener('click', () => {
     const option = document.createElement('option');
     option.value = value;
     option.textContent = value;
-    courseTypeSelect.appendChild(option);
+    courseTypeSelect.insertBefore(option, courseTypeSelect.querySelector('option[value="__add_new__"]'));
   }
 
   courseTypeSelect.value = value;
+  newCourseTypeRow.classList.add('hidden');
   newCourseTypeInput.value = '';
 });
 cancelCheckinBtn.addEventListener('click', () => checkinDialog.close());
