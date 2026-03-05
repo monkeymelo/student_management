@@ -49,3 +49,56 @@
   "message": "课时已用完，无法签到"
 }
 ```
+
+
+## DELETE /api/attendance/:id
+
+删除一条签到记录，并回滚学生课时统计。
+
+### 请求路径
+
+- `/api/attendance/10`
+
+### 成功响应（200）
+
+```json
+{
+  "code": "OK",
+  "message": "删除成功",
+  "data": {
+    "attendance": {
+      "id": 10,
+      "student_id": 1,
+      "class_date": "2026-01-03",
+      "class_time": "11:00:00",
+      "class_content": "视唱练耳",
+      "signed_at": "2026-01-03T03:00:00.000Z"
+    },
+    "student": {
+      "id": 1,
+      "completed_lessons": 7,
+      "remaining_lessons": 5
+    }
+  }
+}
+```
+
+### 典型失败响应
+
+签到记录不存在（404）：
+
+```json
+{
+  "code": "ATTENDANCE_NOT_FOUND",
+  "message": "签到记录不存在"
+}
+```
+
+学生不存在（404）：
+
+```json
+{
+  "code": "STUDENT_NOT_FOUND",
+  "message": "学生不存在"
+}
+```

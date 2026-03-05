@@ -178,7 +178,7 @@ async function openDetailPage(studentId) {
 
 function renderAttendances(records) {
   if (!records.length) {
-    attendanceTbody.innerHTML = '<tr><td colspan="3" class="empty">暂无签到记录</td></tr>';
+    attendanceTbody.innerHTML = '<tr><td colspan="4" class="empty">暂无签到记录</td></tr>';
     return;
   }
 
@@ -187,6 +187,7 @@ function renderAttendances(records) {
       <td>${item.class_date}</td>
       <td>${item.class_time.slice(0, 5)}</td>
       <td>${item.class_content}</td>
+      <td><button type="button" class="danger-ghost-btn attendance-delete-btn" data-id="${item.id}">删除</button></td>
     </tr>
   `).join('');
 }
@@ -287,6 +288,24 @@ detailCard.addEventListener('click', async (event) => {
     return;
   }
 
+});
+
+
+attendanceTbody.addEventListener('click', async (event) => {
+  const deleteBtn = event.target.closest('.attendance-delete-btn');
+  if (!deleteBtn || !selectedStudentId) return;
+
+  const attendanceId = deleteBtn.dataset.id;
+  const confirmed = window.confirm('确认删除该签到记录？删除后会回滚课时统计。');
+  if (!confirmed) return;
+
+  try {
+    await apiFetch(`/api/attendance/${attendanceId}`, { method: 'DELETE' });
+    await loadStudents();
+    await openDetailPage(selectedStudentId);
+  } catch (error) {
+    window.alert(error.message || '删除签到记录失败');
+  }
 });
 
 topDeleteBtn.addEventListener('click', async () => {
