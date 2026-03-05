@@ -7,7 +7,7 @@ const AttendanceFields = {
   studentId: 'INTEGER NOT NULL',
   classDate: 'DATE NOT NULL',
   classTime: 'TIME NOT NULL',
-  classContent: 'TEXT NOT NULL',
+  classContent: 'TEXT',
   signedAt: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP',
   createdAt: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
 };

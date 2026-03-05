@@ -5,11 +5,16 @@ const attendanceTbody = document.getElementById('attendance-tbody');
 const searchInput = document.getElementById('search-input');
 const backBtn = document.getElementById('back-btn');
 const detailCard = document.getElementById('student-detail-card');
+const topDeleteBtn = document.getElementById('top-delete-btn');
 
-const createStudentBtn = document.getElementById('create-student-btn');
+const topListBtn = document.getElementById('top-list-btn');
+const topCreateBtn = document.getElementById('top-create-btn');
 const studentDialog = document.getElementById('student-dialog');
 const studentForm = document.getElementById('student-form');
 const cancelStudentBtn = document.getElementById('cancel-student-btn');
+const courseTypeSelect = document.getElementById('course_type');
+const newCourseTypeInput = document.getElementById('new-course-type');
+const addCourseTypeBtn = document.getElementById('add-course-type-btn');
 
 const checkinDialog = document.getElementById('checkin-dialog');
 const checkinForm = document.getElementById('checkin-form');
@@ -61,7 +66,6 @@ function validateCheckinForm(data) {
   const errors = {};
   if (!data.date) errors.date = '日期为必填项';
   if (!data.time) errors.time = '时间为必填项';
-  if (!data.content.trim()) errors.content = '课程内容为必填项';
   return errors;
 }
 
@@ -122,6 +126,14 @@ function openListPage() {
   selectedStudentId = null;
 }
 
+function openStudentDialog() {
+  studentForm.reset();
+  courseTypeSelect.value = '创想课';
+  setErrors(studentForm, {});
+  document.getElementById('student-form-server-error').textContent = '';
+  studentDialog.showModal();
+}
+
 async function openDetailPage(studentId) {
   selectedStudentId = Number(studentId);
   const json = await apiFetch(`/api/students/${selectedStudentId}`);
@@ -144,7 +156,6 @@ async function openDetailPage(studentId) {
       <div class="detail-actions">
         <button type="button" id="detail-renew-btn">续费</button>
         <button type="button" id="detail-checkin-btn" ${student.remaining_lessons <= 0 ? 'disabled' : ''}>上课签到</button>
-        <button type="button" id="detail-delete-btn" class="danger-btn">删除学生</button>
       </div>
     </div>
     <div class="detail-grid">
@@ -193,14 +204,27 @@ studentList.addEventListener('click', async (event) => {
 
 backBtn.addEventListener('click', () => openListPage());
 
-createStudentBtn.addEventListener('click', () => {
-  studentForm.reset();
-  setErrors(studentForm, {});
-  document.getElementById('student-form-server-error').textContent = '';
-  studentDialog.showModal();
-});
+topCreateBtn.addEventListener('click', () => openStudentDialog());
+
+topListBtn.addEventListener('click', () => openListPage());
 
 cancelStudentBtn.addEventListener('click', () => studentDialog.close());
+
+addCourseTypeBtn.addEventListener('click', () => {
+  const value = newCourseTypeInput.value.trim();
+  if (!value) return;
+
+  const existing = Array.from(courseTypeSelect.options).find((option) => option.value === value);
+  if (!existing) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    courseTypeSelect.appendChild(option);
+  }
+
+  courseTypeSelect.value = value;
+  newCourseTypeInput.value = '';
+});
 cancelCheckinBtn.addEventListener('click', () => checkinDialog.close());
 cancelRenewBtn.addEventListener('click', () => renewDialog.close());
 
@@ -246,18 +270,20 @@ detailCard.addEventListener('click', async (event) => {
     return;
   }
 
-  const deleteBtn = event.target.closest('#detail-delete-btn');
-  if (deleteBtn && selectedStudentId) {
-    const confirmed = window.confirm('确认删除该学生？此操作会删除该学生及所有签到记录，且无法恢复。');
-    if (!confirmed) return;
+});
 
-    try {
-      await apiFetch(`/api/students/${selectedStudentId}`, { method: 'DELETE' });
-      openListPage();
-      await loadStudents();
-    } catch (error) {
-      window.alert(error.message || '删除失败');
-    }
+topDeleteBtn.addEventListener('click', async () => {
+  if (!selectedStudentId) return;
+
+  const confirmed = window.confirm('确认删除该学生？此操作会删除该学生及所有签到记录，且无法恢复。');
+  if (!confirmed) return;
+
+  try {
+    await apiFetch(`/api/students/${selectedStudentId}`, { method: 'DELETE' });
+    openListPage();
+    await loadStudents();
+  } catch (error) {
+    window.alert(error.message || '删除失败');
   }
 });
 

@@ -11,9 +11,30 @@ body { margin: 0; background: #f5f7fb; }
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
   padding: 20px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 }
 
 .topbar h1 { margin: 0; font-size: 42px; color: #1e293b; }
+
+.topbar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.icon-btn,
+.text-danger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon {
+  font-size: 18px;
+  line-height: 1;
+}
 
 .container {
   max-width: 1200px;
@@ -112,13 +133,29 @@ button[disabled] {
   margin-bottom: 16px;
 }
 
+.detail-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .link-btn {
   background: transparent;
   border: none;
   color: #4f46e5;
   padding: 0;
-  margin-bottom: 16px;
+  margin: 0;
   font-size: 24px;
+}
+
+.text-danger-btn {
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  padding: 0;
+  font-size: 34px;
+  font-weight: 600;
 }
 
 .detail-top {
@@ -130,11 +167,6 @@ button[disabled] {
 .detail-actions {
   display: flex;
   gap: 8px;
-}
-
-.danger-btn {
-  background: #ef4444;
-  border-color: #ef4444;
 }
 
 .detail-top h2 { margin: 0; font-size: 42px; }
@@ -173,6 +205,15 @@ menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; margin-to
 dialog { border: none; border-radius: 12px; width: 420px; box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2); }
 dialog form { display: flex; flex-direction: column; gap: 8px; }
 label { display: flex; flex-direction: column; gap: 4px; }
+
+.inline-row {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-row input {
+  flex: 1;
+}
 
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 18px; }

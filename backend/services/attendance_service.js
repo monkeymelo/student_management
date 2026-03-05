@@ -13,8 +13,8 @@ class AttendanceService {
   }
 
   async checkIn(studentId, date, time, content) {
-    if (!studentId || !date || !time || !content) {
-      throw new AttendanceServiceError('INVALID_ARGUMENT', 'student_id/date/time/content 均为必填项', 400);
+    if (!studentId || !date || !time) {
+      throw new AttendanceServiceError('INVALID_ARGUMENT', 'student_id/date/time 均为必填项', 400);
     }
 
     return this.repository.transaction(async (tx) => {
@@ -32,7 +32,7 @@ class AttendanceService {
         student_id: studentId,
         class_date: date,
         class_time: time,
-        class_content: content
+        class_content: content || ''
       });
 
       const updatedStudent = await tx.updateStudentLessonStats(studentId, {

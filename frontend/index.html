@@ -9,6 +9,10 @@
   <body>
     <header class="topbar">
       <h1>一期一绘学生管理系统</h1>
+      <div class="topbar-actions">
+        <button id="top-list-btn" type="button" class="secondary icon-btn"><span class="icon" aria-hidden="true">👥</span>学生列表</button>
+        <button id="top-create-btn" type="button" class="secondary icon-btn"><span class="icon" aria-hidden="true">⊕</span>录入学生</button>
+      </div>
     </header>
 
     <main class="container">
@@ -17,7 +21,6 @@
           <h2>学生列表</h2>
           <div class="actions">
             <input id="search-input" type="search" placeholder="搜索姓名或课程种类..." />
-            <button id="create-student-btn" type="button">录入学生</button>
           </div>
         </div>
 
@@ -25,7 +28,10 @@
       </section>
 
       <section id="detail-page" class="page">
-        <button id="back-btn" class="link-btn" type="button">← 返回列表</button>
+        <div class="detail-toolbar">
+          <button id="back-btn" class="link-btn" type="button">← 返回列表</button>
+          <button id="top-delete-btn" class="text-danger-btn" type="button"><span class="icon" aria-hidden="true">🗑</span>删除学生</button>
+        </div>
 
         <article class="card" id="student-detail-card"></article>
 
@@ -66,7 +72,14 @@
           <small class="error" data-error-for="age"></small>
         </label>
         <label>课程种类
-          <input id="course_type" name="course_type" required maxlength="50" />
+          <select id="course_type" name="course_type" required>
+            <option value="创想课" selected>创想课</option>
+            <option value="大师课">大师课</option>
+          </select>
+          <div class="inline-row">
+            <input id="new-course-type" maxlength="50" placeholder="添加新的课程种类" />
+            <button type="button" id="add-course-type-btn" class="secondary">添加</button>
+          </div>
           <small class="error" data-error-for="course_type"></small>
         </label>
         <label>报课总数
@@ -99,7 +112,7 @@
           <small class="error" data-error-for="time"></small>
         </label>
         <label>课程内容
-          <input id="checkin-content" name="content" required maxlength="80" />
+          <input id="checkin-content" name="content" maxlength="80" />
           <small class="error" data-error-for="content"></small>
         </label>
 
