@@ -30,6 +30,8 @@ const masterWeekRange = document.getElementById('master-week-range');
 
 const checkinDialog = document.getElementById('checkin-dialog');
 const checkinForm = document.getElementById('checkin-form');
+const checkinHourSelect = document.getElementById('checkin-hour');
+const checkinMinuteSelect = document.getElementById('checkin-minute');
 const cancelCheckinBtn = document.getElementById('cancel-checkin-btn');
 const batchCheckinDialog = document.getElementById('batch-checkin-dialog');
 const batchCheckinForm = document.getElementById('batch-checkin-form');
@@ -91,6 +93,47 @@ function formatScheduleTimeRange(schedule) {
   return `${String(schedule.start_time || '').slice(0, 5)}-${String(schedule.end_time || '').slice(0, 5)}`;
 }
 
+const TIME_FORMAT_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const HOUR_OPTIONS_HTML = Array.from({ length: 24 }, (_, hour) => {
+  const value = String(hour).padStart(2, '0');
+  return `<option value="${value}">${value}</option>`;
+}).join('');
+const MINUTE_OPTIONS_HTML = Array.from({ length: 60 }, (_, minute) => {
+  const value = String(minute).padStart(2, '0');
+  return `<option value="${value}">${value}</option>`;
+}).join('');
+
+function normalizeTimeValue(value, fallback = '00:00') {
+  const matched = String(value || '').match(TIME_FORMAT_REGEX);
+  if (matched) return { hour: matched[1], minute: matched[2] };
+  const fallbackMatched = fallback.match(TIME_FORMAT_REGEX);
+  return { hour: fallbackMatched[1], minute: fallbackMatched[2] };
+}
+
+
+function syncCheckinTimeValue() {
+  if (!checkinHourSelect || !checkinMinuteSelect) return;
+  document.getElementById('checkin-time').value = `${checkinHourSelect.value}:${checkinMinuteSelect.value}`;
+}
+
+function bindTimeSelectGroup(container, prefix, initialValue = '00:00') {
+  const hourSelect = container.querySelector(`.${prefix}-hour`);
+  const minuteSelect = container.querySelector(`.${prefix}-minute`);
+  const hiddenInput = container.querySelector(`.${prefix}-time`);
+
+  const setTimeValue = () => {
+    hiddenInput.value = `${hourSelect.value}:${minuteSelect.value}`;
+  };
+
+  const normalized = normalizeTimeValue(initialValue);
+  hourSelect.value = normalized.hour;
+  minuteSelect.value = normalized.minute;
+  setTimeValue();
+
+  hourSelect.addEventListener('change', setTimeValue);
+  minuteSelect.addEventListener('change', setTimeValue);
+}
+
 function renderScheduleRow(schedule = {}) {
   const row = document.createElement('div');
   row.className = 'schedule-row';
@@ -98,15 +141,21 @@ function renderScheduleRow(schedule = {}) {
     <select class="schedule-weekday" aria-label="上课周几">
       ${WEEKDAY_OPTIONS.map((option) => `<option value="${option.value}">${option.label}</option>`).join('')}
     </select>
-    <input class="schedule-start-time" type="time" step="60" aria-label="开始时间" />
+    <select class="schedule-start-hour" aria-label="开始小时">${HOUR_OPTIONS_HTML}</select>
+    <span>:</span>
+    <select class="schedule-start-minute" aria-label="开始分钟">${MINUTE_OPTIONS_HTML}</select>
+    <input class="schedule-start-time" type="hidden" />
     <span class="schedule-separator">-</span>
-    <input class="schedule-end-time" type="time" step="60" aria-label="结束时间" />
+    <select class="schedule-end-hour" aria-label="结束小时">${HOUR_OPTIONS_HTML}</select>
+    <span>:</span>
+    <select class="schedule-end-minute" aria-label="结束分钟">${MINUTE_OPTIONS_HTML}</select>
+    <input class="schedule-end-time" type="hidden" />
     <button type="button" class="danger-ghost-btn schedule-remove-btn" aria-label="删除时段" title="删除时段">✕</button>
   `;
 
   row.querySelector('.schedule-weekday').value = String(schedule.weekday || '1');
-  row.querySelector('.schedule-start-time').value = String(schedule.start_time || '').slice(0, 5);
-  row.querySelector('.schedule-end-time').value = String(schedule.end_time || '').slice(0, 5);
+  bindTimeSelectGroup(row, 'schedule-start', String(schedule.start_time || '').slice(0, 5) || '09:00');
+  bindTimeSelectGroup(row, 'schedule-end', String(schedule.end_time || '').slice(0, 5) || '10:00');
   scheduleList.appendChild(row);
 }
 
@@ -164,6 +213,11 @@ function validateStudentForm(data) {
       return;
     }
 
+    if (!TIME_FORMAT_REGEX.test(schedule.start_time) || !TIME_FORMAT_REGEX.test(schedule.end_time)) {
+      errors.schedules = `上课时间格式需为 HH:mm（第 ${index + 1} 条）`;
+      return;
+    }
+
     if (!schedule.weekday || schedule.weekday < 1 || schedule.weekday > 7) {
       errors.schedules = `上课周几无效（第 ${index + 1} 条）`;
       return;
@@ -189,7 +243,7 @@ function validateCheckinForm(data) {
   const errors = {};
   if (!data.date) errors.date = '日期为必填项';
   if (!data.time) errors.time = '时间为必填项';
-  if (data.time && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.time)) {
+  if (data.time && !TIME_FORMAT_REGEX.test(data.time)) {
     errors.time = '请输入24小时制时间（例如 18:00）';
   }
   return errors;
@@ -532,6 +586,8 @@ addCourseTypeBtn.addEventListener('click', () => {
   newCourseTypeInput.value = '';
 });
 cancelCheckinBtn.addEventListener('click', () => checkinDialog.close());
+checkinHourSelect?.addEventListener('change', syncCheckinTimeValue);
+checkinMinuteSelect?.addEventListener('change', syncCheckinTimeValue);
 cancelBatchCheckinBtn.addEventListener('click', () => batchCheckinDialog.close());
 cancelRenewBtn.addEventListener('click', () => renewDialog.close());
 cancelRemarkBtn.addEventListener('click', () => remarkDialog.close());
@@ -568,7 +624,9 @@ detailCard.addEventListener('click', async (event) => {
 
     document.getElementById('checkin-student-id').value = String(selectedStudentId);
     document.getElementById('checkin-date').valueAsDate = new Date();
-    document.getElementById('checkin-time').value = '18:00';
+    checkinHourSelect.value = '18';
+    checkinMinuteSelect.value = '00';
+    syncCheckinTimeValue();
     document.getElementById('checkin-content').value = '';
     setErrors(checkinForm, {});
     document.getElementById('checkin-form-server-error').textContent = '';
@@ -662,6 +720,7 @@ topDeleteBtn.addEventListener('click', async () => {
 
 checkinForm.addEventListener('submit', async (event) => {
   event.preventDefault();
+  syncCheckinTimeValue();
   const formData = Object.fromEntries(new FormData(checkinForm).entries());
   const errors = validateCheckinForm(formData);
   setErrors(checkinForm, errors);
