@@ -29,3 +29,13 @@
 - `class_time`: 上课时间
 - `class_content`: 上课内容
 - `signed_at`: 签到时间戳
+
+## ClassSession
+- `id`: 会话ID
+- `session_date`: 上课日期（`YYYY-MM-DD`）
+- `weekday`: 周几（1-7）
+- `start_time`: 开始时间（`HH:mm:ss`）
+- `end_time`: 结束时间（`HH:mm:ss`）
+- `class_content`: 课堂内容
+- `created_at`: 创建时间戳
+- 唯一约束：`(session_date, weekday, start_time, end_time)`，同一天同一时段只允许一个会话

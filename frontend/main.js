@@ -387,11 +387,12 @@ function renderMasterTimetable() {
               </ul>
               <button
                 type="button"
-                class="secondary timetable-checkin-btn"
+                class="secondary timetable-checkin-btn ${card.today_has_session ? 'is-checked-in' : ''}"
                 data-weekday="${card.weekday}"
                 data-start-time="${escapeHtml(String(card.start_time || '').slice(0, 5))}"
                 data-end-time="${escapeHtml(String(card.end_time || '').slice(0, 5))}"
-              >批量签到</button>
+                data-checked-in="${card.today_has_session ? 'true' : 'false'}"
+              >${card.today_has_session ? '今日已签到' : '批量签到'}</button>
               <p class="signed-today-placeholder">今日已签到：${card.today_checked_in || 0}人</p>
             </article>
           `).join('') : '<div class="empty">无时段</div>'}
@@ -580,6 +581,10 @@ detailCard.addEventListener('click', async (event) => {
 masterTimetableContainer.addEventListener('click', async (event) => {
   const checkinBtn = event.target.closest('.timetable-checkin-btn');
   if (!checkinBtn) return;
+  if (checkinBtn.dataset.checkedIn === 'true') {
+    window.alert('该时段今日已签到，请勿重复提交');
+    return;
+  }
 
   try {
     await openBatchCheckinDialog({
@@ -682,6 +687,11 @@ batchCheckinForm.addEventListener('submit', async (event) => {
     await loadMasterTimetable();
     window.alert(`批量签到完成：成功 ${response.data.success_count} 人，跳过 ${response.data.skipped.length} 人，失败 ${response.data.failed.length} 人`);
   } catch (error) {
+    if (error.code === 'SESSION_ALREADY_CHECKED_IN') {
+      document.getElementById('batch-checkin-form-server-error').textContent = '该时段今日已签到，请勿重复提交';
+      await loadMasterTimetable();
+      return;
+    }
     document.getElementById('batch-checkin-form-server-error').textContent = error.message || '批量签到失败';
   }
 });

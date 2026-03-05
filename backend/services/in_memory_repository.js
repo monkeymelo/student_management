@@ -158,6 +158,19 @@ class InMemoryRepository {
   }
 
   async createClassSession(payload) {
+    const existed = await this.findClassSessionBySlot(
+      payload.session_date,
+      payload.weekday,
+      payload.start_time,
+      payload.end_time
+    );
+
+    if (existed) {
+      const error = new Error('SESSION_ALREADY_EXISTS');
+      error.code = 'SESSION_ALREADY_EXISTS';
+      throw error;
+    }
+
     const row = {
       id: this.classSessionId++,
       ...payload,
@@ -166,6 +179,17 @@ class InMemoryRepository {
     };
     this.classSessions.push(row);
     return { ...row };
+  }
+
+  async findClassSessionBySlot(sessionDate, weekday, startTime, endTime) {
+    const found = this.classSessions.find((session) => (
+      String(session.session_date) === String(sessionDate)
+      && Number(session.weekday) === Number(weekday)
+      && String(session.start_time).slice(0, 8) === String(startTime).slice(0, 8)
+      && String(session.end_time).slice(0, 8) === String(endTime).slice(0, 8)
+    ));
+
+    return found ? { ...found } : null;
   }
 
   async getDueStudentsForSlot(weekday, startTime, endTime) {
@@ -318,7 +342,8 @@ class InMemoryRepository {
 
     const values = await Promise.all(Array.from(grouped.values()).map(async (item) => ({
       ...item,
-      today_checked_in: await this.countPresentBySlotAndDate(todayIso, item.weekday, item.start_time, item.end_time)
+      today_checked_in: await this.countPresentBySlotAndDate(todayIso, item.weekday, item.start_time, item.end_time),
+      today_has_session: Boolean(await this.findClassSessionBySlot(todayIso, item.weekday, item.start_time, item.end_time))
     })));
 
     return values
