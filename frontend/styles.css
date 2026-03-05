@@ -347,8 +347,10 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 
 .master-timetable-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(7, minmax(220px, 1fr));
   gap: 14px;
+  overflow-x: auto;
+  align-items: start;
 }
 
 .weekday-column {
