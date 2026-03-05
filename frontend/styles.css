@@ -239,10 +239,81 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 
 .danger-ghost-btn:hover {
   background: #fef2f2;
+}
+
 .detail-remark-btn {
   border-color: #0ea5e9;
   background: #e0f2fe;
   color: #075985;
+}
+
+.schedule-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.schedule-fieldset-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #334155;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.schedule-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-separator {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.detail-schedules {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.detail-schedules h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.schedule-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.schedule-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: #4338ca;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+}
+
+.schedule-empty {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
 }
 
 #remark-dialog {
