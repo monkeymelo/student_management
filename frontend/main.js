@@ -24,6 +24,9 @@ const cancelCheckinBtn = document.getElementById('cancel-checkin-btn');
 const renewDialog = document.getElementById('renew-dialog');
 const renewForm = document.getElementById('renew-form');
 const cancelRenewBtn = document.getElementById('cancel-renew-btn');
+const remarkDialog = document.getElementById('remark-dialog');
+const remarkForm = document.getElementById('remark-form');
+const cancelRemarkBtn = document.getElementById('cancel-remark-btn');
 
 let students = [];
 let selectedStudentId = null;
@@ -69,6 +72,17 @@ function validateCheckinForm(data) {
   if (!data.time) errors.time = '时间为必填项';
   if (data.time && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.time)) {
     errors.time = '请输入24小时制时间（例如 18:00）';
+  }
+  return errors;
+}
+
+function validateRemarkForm(data) {
+  const errors = {};
+  if (typeof data.remark !== 'string') {
+    errors.remark = '备注格式不正确';
+  }
+  if (String(data.remark || '').trim().length > 500) {
+    errors.remark = '备注长度不能超过 500';
   }
   return errors;
 }
@@ -162,6 +176,7 @@ async function openDetailPage(studentId) {
       <div class="detail-actions">
         <button type="button" id="detail-renew-btn">续费</button>
         <button type="button" id="detail-checkin-btn" ${student.remaining_lessons <= 0 ? 'disabled' : ''}>上课签到</button>
+        <button type="button" id="detail-remark-btn" class="secondary detail-remark-btn">备注</button>
       </div>
     </div>
     <div class="detail-grid">
@@ -244,6 +259,7 @@ addCourseTypeBtn.addEventListener('click', () => {
 });
 cancelCheckinBtn.addEventListener('click', () => checkinDialog.close());
 cancelRenewBtn.addEventListener('click', () => renewDialog.close());
+cancelRemarkBtn.addEventListener('click', () => remarkDialog.close());
 
 studentForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -285,6 +301,16 @@ detailCard.addEventListener('click', async (event) => {
     document.getElementById('renew-form-server-error').textContent = '';
     renewDialog.showModal();
     return;
+  }
+
+  const remarkBtn = event.target.closest('#detail-remark-btn');
+  if (remarkBtn && selectedStudentId) {
+    const json = await apiFetch(`/api/students/${selectedStudentId}`);
+    document.getElementById('remark-student-id').value = String(selectedStudentId);
+    document.getElementById('remark-content').value = json.data.remark || '';
+    setErrors(remarkForm, {});
+    document.getElementById('remark-form-server-error').textContent = '';
+    remarkDialog.showModal();
   }
 
 });
@@ -360,3 +386,30 @@ renewForm.addEventListener('submit', async (event) => {
 });
 
 loadStudents();
+
+
+remarkForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const studentId = Number(document.getElementById('remark-student-id').value);
+  const formData = Object.fromEntries(new FormData(remarkForm).entries());
+  const payload = {
+    remark: String(formData.remark || '').trim()
+  };
+
+  const errors = validateRemarkForm(payload);
+  setErrors(remarkForm, errors);
+  if (Object.keys(errors).length) return;
+
+  try {
+    await apiFetch(`/api/students/${studentId}/remark`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+
+    remarkDialog.close();
+    await loadStudents();
+    await openDetailPage(studentId);
+  } catch (error) {
+    document.getElementById('remark-form-server-error').textContent = error.message || '备注保存失败';
+  }
+});

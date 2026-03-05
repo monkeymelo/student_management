@@ -12,6 +12,7 @@ const StudentFields = {
   totalAmount: 'DECIMAL(10,2) NOT NULL DEFAULT 0.00 CHECK (total_amount >= 0)',
   attendedCount: 'INTEGER NOT NULL DEFAULT 0 CHECK (attended_count >= 0)',
   remainingLessons: 'INTEGER NOT NULL DEFAULT 0 CHECK (remaining_lessons >= 0)',
+  remark: "TEXT NOT NULL DEFAULT ''",
   createdAt: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP',
   updatedAt: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
 };

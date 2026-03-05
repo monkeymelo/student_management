@@ -25,7 +25,8 @@ class InMemoryRepository {
         enroll_count: Number(student.enroll_count),
         total_amount: Number(student.total_amount),
         attended_count: Number(student.attended_count || 0),
-        remaining_lessons: Number(student.remaining_lessons ?? student.enroll_count)
+        remaining_lessons: Number(student.remaining_lessons ?? student.enroll_count),
+        remark: typeof student.remark === 'string' ? student.remark : ''
       });
     });
 
@@ -65,7 +66,8 @@ class InMemoryRepository {
       id,
       attended_count: 0,
       ...payload,
-      remaining_lessons: Number(payload.enroll_count)
+      remaining_lessons: Number(payload.enroll_count),
+      remark: typeof payload.remark === 'string' ? payload.remark : ''
     };
     this.students.set(id, student);
     return { ...student };
@@ -83,7 +85,8 @@ class InMemoryRepository {
       ...current,
       ...payload,
       enroll_count: nextEnrollCount,
-      remaining_lessons: Math.max(0, nextEnrollCount - Number(current.attended_count))
+      remaining_lessons: Math.max(0, nextEnrollCount - Number(current.attended_count)),
+      remark: typeof payload.remark === 'string' ? payload.remark : current.remark
     };
 
     this.students.set(id, updated);
