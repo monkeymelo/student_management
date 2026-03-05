@@ -16,6 +16,8 @@ const courseTypeSelect = document.getElementById('course_type');
 const newCourseTypeRow = document.getElementById('new-course-type-row');
 const newCourseTypeInput = document.getElementById('new-course-type');
 const addCourseTypeBtn = document.getElementById('add-course-type-btn');
+const addScheduleBtn = document.getElementById('add-schedule-btn');
+const scheduleList = document.getElementById('schedule-list');
 
 const checkinDialog = document.getElementById('checkin-dialog');
 const checkinForm = document.getElementById('checkin-form');
@@ -31,6 +33,17 @@ const cancelRemarkBtn = document.getElementById('cancel-remark-btn');
 let students = [];
 let selectedStudentId = null;
 let keyword = '';
+let editingStudentId = null;
+
+const WEEKDAY_OPTIONS = [
+  { value: '1', label: '周一' },
+  { value: '2', label: '周二' },
+  { value: '3', label: '周三' },
+  { value: '4', label: '周四' },
+  { value: '5', label: '周五' },
+  { value: '6', label: '周六' },
+  { value: '7', label: '周日' }
+];
 
 function setErrors(form, errors) {
   form.querySelectorAll('[data-error-for]').forEach((node) => {
@@ -42,6 +55,57 @@ function genderText(gender) {
   if (gender === 'male') return '男';
   if (gender === 'female') return '女';
   return '其他';
+}
+
+function weekdayText(weekday) {
+  const found = WEEKDAY_OPTIONS.find((option) => Number(option.value) === Number(weekday));
+  return found ? found.label : '未知';
+}
+
+function formatScheduleTimeRange(schedule) {
+  return `${String(schedule.start_time || '').slice(0, 5)}-${String(schedule.end_time || '').slice(0, 5)}`;
+}
+
+function renderScheduleRow(schedule = {}) {
+  const row = document.createElement('div');
+  row.className = 'schedule-row';
+  row.innerHTML = `
+    <select class="schedule-weekday" aria-label="上课周几">
+      ${WEEKDAY_OPTIONS.map((option) => `<option value="${option.value}">${option.label}</option>`).join('')}
+    </select>
+    <input class="schedule-start-time" type="time" step="60" aria-label="开始时间" />
+    <span class="schedule-separator">-</span>
+    <input class="schedule-end-time" type="time" step="60" aria-label="结束时间" />
+    <button type="button" class="danger-ghost-btn schedule-remove-btn">删除</button>
+  `;
+
+  row.querySelector('.schedule-weekday').value = String(schedule.weekday || '1');
+  row.querySelector('.schedule-start-time').value = String(schedule.start_time || '').slice(0, 5);
+  row.querySelector('.schedule-end-time').value = String(schedule.end_time || '').slice(0, 5);
+  scheduleList.appendChild(row);
+}
+
+function resetSchedules(schedules = []) {
+  scheduleList.innerHTML = '';
+  schedules.forEach((schedule) => renderScheduleRow(schedule));
+}
+
+function collectSchedules() {
+  return Array.from(scheduleList.querySelectorAll('.schedule-row')).map((row) => ({
+    weekday: Number(row.querySelector('.schedule-weekday').value),
+    start_time: row.querySelector('.schedule-start-time').value,
+    end_time: row.querySelector('.schedule-end-time').value
+  }));
+}
+
+function ensureCourseTypeOption(value) {
+  if (!value) return;
+  const existing = Array.from(courseTypeSelect.options).find((option) => option.value === value);
+  if (existing) return;
+  const option = document.createElement('option');
+  option.value = value;
+  option.textContent = value;
+  courseTypeSelect.insertBefore(option, courseTypeSelect.querySelector('option[value="__add_new__"]'));
 }
 
 function validateStudentForm(data) {
@@ -62,6 +126,36 @@ function validateStudentForm(data) {
   if (Number.isNaN(totalAmount) || totalAmount < 0 || totalAmount > 9999999) {
     errors.total_amount = '总金额需在 0-9999999';
   }
+
+  if (!Array.isArray(data.schedules)) {
+    errors.schedules = '排课数据格式不正确';
+    return errors;
+  }
+
+  const duplicateSet = new Set();
+  data.schedules.forEach((schedule, index) => {
+    if (!schedule.start_time || !schedule.end_time) {
+      errors.schedules = `请填写完整的上课时间（第 ${index + 1} 条）`;
+      return;
+    }
+
+    if (!schedule.weekday || schedule.weekday < 1 || schedule.weekday > 7) {
+      errors.schedules = `上课周几无效（第 ${index + 1} 条）`;
+      return;
+    }
+
+    if (schedule.start_time >= schedule.end_time) {
+      errors.schedules = `开始时间需早于结束时间（第 ${index + 1} 条）`;
+      return;
+    }
+
+    const key = `${schedule.weekday}-${schedule.start_time}-${schedule.end_time}`;
+    if (duplicateSet.has(key)) {
+      errors.schedules = '存在重复的上课时间';
+      return;
+    }
+    duplicateSet.add(key);
+  });
 
   return errors;
 }
@@ -145,10 +239,32 @@ function openListPage() {
 }
 
 function openStudentDialog() {
+  editingStudentId = null;
   studentForm.reset();
+  studentForm.querySelector('h3').textContent = '录入学生';
   courseTypeSelect.value = '创想课';
   newCourseTypeRow.classList.add('hidden');
   newCourseTypeInput.value = '';
+  resetSchedules();
+  setErrors(studentForm, {});
+  document.getElementById('student-form-server-error').textContent = '';
+  studentDialog.showModal();
+}
+
+function openEditStudentDialog(student) {
+  editingStudentId = Number(student.id);
+  studentForm.reset();
+  studentForm.querySelector('h3').textContent = '编辑学生';
+  document.getElementById('name').value = student.name || '';
+  document.getElementById('gender').value = student.gender || '';
+  document.getElementById('age').value = student.age || '';
+  ensureCourseTypeOption(student.course_type);
+  document.getElementById('course_type').value = student.course_type || '创想课';
+  document.getElementById('enroll_count').value = student.enroll_count || '';
+  document.getElementById('total_amount').value = student.total_amount || '';
+  newCourseTypeRow.classList.add('hidden');
+  newCourseTypeInput.value = '';
+  resetSchedules(student.schedules || []);
   setErrors(studentForm, {});
   document.getElementById('student-form-server-error').textContent = '';
   studentDialog.showModal();
@@ -176,8 +292,15 @@ async function openDetailPage(studentId) {
       <div class="detail-actions">
         <button type="button" id="detail-renew-btn">续费</button>
         <button type="button" id="detail-checkin-btn" ${student.remaining_lessons <= 0 ? 'disabled' : ''}>上课签到</button>
+        <button type="button" id="detail-edit-schedules-btn" class="secondary">编辑排课</button>
         <button type="button" id="detail-remark-btn" class="secondary detail-remark-btn">备注</button>
       </div>
+    </div>
+    <div class="detail-schedules">
+      <h3>上课时段</h3>
+      ${(student.schedules || []).length
+        ? `<div class="schedule-tags">${student.schedules.map((schedule) => `<span class="schedule-tag">${weekdayText(schedule.weekday)} ${formatScheduleTimeRange(schedule)}</span>`).join('')}</div>`
+        : '<p class="schedule-empty">暂无排课</p>'}
     </div>
     <div class="detail-grid">
       <p><span>课程进度</span><strong>已上 ${student.attended_count} / 剩余 ${student.remaining_lessons}</strong></p>
@@ -231,6 +354,13 @@ topCreateBtn.addEventListener('click', () => openStudentDialog());
 topListBtn.addEventListener('click', () => openListPage());
 
 cancelStudentBtn.addEventListener('click', () => studentDialog.close());
+addScheduleBtn.addEventListener('click', () => renderScheduleRow());
+
+scheduleList.addEventListener('click', (event) => {
+  const removeBtn = event.target.closest('.schedule-remove-btn');
+  if (!removeBtn) return;
+  removeBtn.closest('.schedule-row')?.remove();
+});
 
 courseTypeSelect.addEventListener('change', () => {
   if (courseTypeSelect.value === '__add_new__') {
@@ -265,14 +395,23 @@ cancelRemarkBtn.addEventListener('click', () => remarkDialog.close());
 studentForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(studentForm).entries());
+  data.schedules = collectSchedules();
   const errors = validateStudentForm(data);
   setErrors(studentForm, errors);
   if (Object.keys(errors).length) return;
 
   try {
-    await apiFetch('/api/students', { method: 'POST', body: JSON.stringify(data) });
+    if (editingStudentId) {
+      await apiFetch(`/api/students/${editingStudentId}`, { method: 'PUT', body: JSON.stringify(data) });
+    } else {
+      await apiFetch('/api/students', { method: 'POST', body: JSON.stringify(data) });
+    }
     studentDialog.close();
     await loadStudents();
+    if (editingStudentId) {
+      await openDetailPage(editingStudentId);
+    }
+    editingStudentId = null;
   } catch (error) {
     document.getElementById('student-form-server-error').textContent = error.message || '保存失败';
   }
@@ -312,6 +451,13 @@ detailCard.addEventListener('click', async (event) => {
     setErrors(remarkForm, {});
     document.getElementById('remark-form-server-error').textContent = '';
     remarkDialog.showModal();
+    return;
+  }
+
+  const editSchedulesBtn = event.target.closest('#detail-edit-schedules-btn');
+  if (editSchedulesBtn && selectedStudentId) {
+    const json = await apiFetch(`/api/students/${selectedStudentId}`);
+    openEditStudentDialog(json.data);
   }
 
 });
