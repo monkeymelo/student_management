@@ -244,7 +244,7 @@ class InMemoryRepository {
   }
 
   async listAttendances(filters = {}) {
-    const { student_id, start_date, end_date } = filters;
+    const { student_id, start_date, end_date, status } = filters;
     return this.attendances
       .filter((record) => {
         if (student_id && Number(record.student_id) !== Number(student_id)) {
@@ -254,6 +254,9 @@ class InMemoryRepository {
           return false;
         }
         if (end_date && record.class_date > end_date) {
+          return false;
+        }
+        if (status && String(record.status) !== String(status)) {
           return false;
         }
         return true;
