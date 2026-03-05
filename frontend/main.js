@@ -15,6 +15,10 @@ const checkinDialog = document.getElementById('checkin-dialog');
 const checkinForm = document.getElementById('checkin-form');
 const cancelCheckinBtn = document.getElementById('cancel-checkin-btn');
 
+const renewDialog = document.getElementById('renew-dialog');
+const renewForm = document.getElementById('renew-form');
+const cancelRenewBtn = document.getElementById('cancel-renew-btn');
+
 let students = [];
 let selectedStudentId = null;
 let keyword = '';
@@ -61,6 +65,21 @@ function validateCheckinForm(data) {
   return errors;
 }
 
+function validateRenewForm(data) {
+  const errors = {};
+  const amount = Number(data.amount);
+  if (Number.isNaN(amount) || amount <= 0 || amount > 9999999) {
+    errors.amount = '续费金额需大于 0 且不超过 9999999';
+  }
+
+  const enrollCount = Number(data.enroll_count);
+  if (!Number.isInteger(enrollCount) || enrollCount <= 0 || enrollCount > 1000) {
+    errors.enroll_count = '续课次数需在 1-1000';
+  }
+
+  return errors;
+}
+
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
@@ -89,7 +108,10 @@ function renderStudents() {
         <p class="name-row">${student.name} <span>${genderText(student.gender)} · ${student.age}岁</span></p>
         <p class="sub">${student.course_type}</p>
       </div>
-      <div class="progress">课程进度：已上 ${student.attended_count} / 总 ${student.enroll_count}</div>
+      <div class="progress">
+        <div>课程进度：剩余 <span class="${student.remaining_lessons < 5 ? 'danger' : 'safe'}">${student.remaining_lessons}</span>/${student.enroll_count}</div>
+        <small>已上：${student.attended_count}节</small>
+      </div>
     </button>
   `).join('');
 }
@@ -108,6 +130,10 @@ async function openDetailPage(studentId) {
   listPage.classList.remove('active');
   detailPage.classList.add('active');
 
+  const progressPercent = student.enroll_count > 0
+    ? Math.min(100, Math.round((student.attended_count / student.enroll_count) * 100))
+    : 0;
+
   detailCard.innerHTML = `
     <div class="detail-top">
       <div>
@@ -115,10 +141,15 @@ async function openDetailPage(studentId) {
         <p>${genderText(student.gender)} · ${student.age}岁</p>
         <p>${student.course_type}</p>
       </div>
-      <button type="button" id="detail-checkin-btn" ${student.remaining_lessons <= 0 ? 'disabled' : ''}>上课签到</button>
+      <div class="detail-actions">
+        <button type="button" id="detail-renew-btn">续费</button>
+        <button type="button" id="detail-checkin-btn" ${student.remaining_lessons <= 0 ? 'disabled' : ''}>上课签到</button>
+        <button type="button" id="detail-delete-btn" class="danger-btn">删除学生</button>
+      </div>
     </div>
     <div class="detail-grid">
       <p><span>课程进度</span><strong>已上 ${student.attended_count} / 剩余 ${student.remaining_lessons}</strong></p>
+      <div class="detail-progress-track"><div class="detail-progress-fill" style="width:${progressPercent}%"></div></div>
       <p><span>报课总数</span><strong>${student.enroll_count}</strong></p>
       <p><span>总金额</span><strong>¥${Number(student.total_amount).toFixed(2)}</strong></p>
     </div>
@@ -171,6 +202,7 @@ createStudentBtn.addEventListener('click', () => {
 
 cancelStudentBtn.addEventListener('click', () => studentDialog.close());
 cancelCheckinBtn.addEventListener('click', () => checkinDialog.close());
+cancelRenewBtn.addEventListener('click', () => renewDialog.close());
 
 studentForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -188,17 +220,45 @@ studentForm.addEventListener('submit', async (event) => {
   }
 });
 
-detailCard.addEventListener('click', (event) => {
-  const btn = event.target.closest('#detail-checkin-btn');
-  if (!btn || btn.disabled || !selectedStudentId) return;
+detailCard.addEventListener('click', async (event) => {
+  const checkinBtn = event.target.closest('#detail-checkin-btn');
+  if (checkinBtn) {
+    if (checkinBtn.disabled || !selectedStudentId) return;
 
-  document.getElementById('checkin-student-id').value = String(selectedStudentId);
-  document.getElementById('checkin-date').valueAsDate = new Date();
-  document.getElementById('checkin-time').value = '18:00';
-  document.getElementById('checkin-content').value = '';
-  setErrors(checkinForm, {});
-  document.getElementById('checkin-form-server-error').textContent = '';
-  checkinDialog.showModal();
+    document.getElementById('checkin-student-id').value = String(selectedStudentId);
+    document.getElementById('checkin-date').valueAsDate = new Date();
+    document.getElementById('checkin-time').value = '18:00';
+    document.getElementById('checkin-content').value = '';
+    setErrors(checkinForm, {});
+    document.getElementById('checkin-form-server-error').textContent = '';
+    checkinDialog.showModal();
+    return;
+  }
+
+  const renewBtn = event.target.closest('#detail-renew-btn');
+  if (renewBtn && selectedStudentId) {
+    document.getElementById('renew-student-id').value = String(selectedStudentId);
+    document.getElementById('renew-amount').value = '';
+    document.getElementById('renew-enroll-count').value = '';
+    setErrors(renewForm, {});
+    document.getElementById('renew-form-server-error').textContent = '';
+    renewDialog.showModal();
+    return;
+  }
+
+  const deleteBtn = event.target.closest('#detail-delete-btn');
+  if (deleteBtn && selectedStudentId) {
+    const confirmed = window.confirm('确认删除该学生？此操作会删除该学生及所有签到记录，且无法恢复。');
+    if (!confirmed) return;
+
+    try {
+      await apiFetch(`/api/students/${selectedStudentId}`, { method: 'DELETE' });
+      openListPage();
+      await loadStudents();
+    } catch (error) {
+      window.alert(error.message || '删除失败');
+    }
+  }
 });
 
 checkinForm.addEventListener('submit', async (event) => {
@@ -226,6 +286,33 @@ checkinForm.addEventListener('submit', async (event) => {
     await openDetailPage(payload.student_id);
   } catch (error) {
     document.getElementById('checkin-form-server-error').textContent = error.message || '签到失败';
+  }
+});
+
+renewForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const formData = Object.fromEntries(new FormData(renewForm).entries());
+  const errors = validateRenewForm(formData);
+  setErrors(renewForm, errors);
+  if (Object.keys(errors).length) return;
+
+  const studentId = Number(document.getElementById('renew-student-id').value);
+  const payload = {
+    amount: Number(formData.amount),
+    enroll_count: Number(formData.enroll_count)
+  };
+
+  try {
+    await apiFetch(`/api/students/${studentId}/renew`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    renewDialog.close();
+    await loadStudents();
+    await openDetailPage(studentId);
+  } catch (error) {
+    document.getElementById('renew-form-server-error').textContent = error.message || '续费失败';
   }
 });
 

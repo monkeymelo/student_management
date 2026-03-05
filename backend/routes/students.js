@@ -49,6 +49,29 @@ function validateStudentPayload(payload) {
   };
 }
 
+function validateRenewPayload(payload) {
+  const errors = {};
+
+  const amount = Number(payload.amount);
+  if (Number.isNaN(amount) || amount <= 0 || amount > 9999999) {
+    errors.amount = '续费金额需在 0-9999999 且大于 0';
+  }
+
+  const enrollCount = Number(payload.enroll_count);
+  if (!Number.isInteger(enrollCount) || enrollCount <= 0 || enrollCount > 1000) {
+    errors.enroll_count = '续课次数需在 1-1000';
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    sanitized: {
+      amount,
+      enroll_count: enrollCount
+    }
+  };
+}
+
 // 创建学生
 router.post('/', async (req, res) => {
   const { valid, errors, sanitized } = validateStudentPayload(req.body || {});
@@ -89,6 +112,27 @@ router.put('/:id', async (req, res) => {
   }
 
   return res.json({ code: 'OK', data: student });
+});
+
+// 学生续费/续课
+router.post('/:id/renew', async (req, res) => {
+  const { valid, errors, sanitized } = validateRenewPayload(req.body || {});
+  if (!valid) {
+    return res.status(400).json({ code: 'VALIDATION_ERROR', errors });
+  }
+
+  const student = await repository.getStudentById(req.params.id);
+  if (!student) {
+    return res.status(404).json({ code: 'STUDENT_NOT_FOUND', message: '学生不存在' });
+  }
+
+  const updated = await repository.updateStudentLessonStats(req.params.id, {
+    enroll_count: Number(student.enroll_count) + sanitized.enroll_count,
+    total_amount: Number(student.total_amount) + sanitized.amount,
+    remaining_lessons: Number(student.remaining_lessons) + sanitized.enroll_count
+  });
+
+  return res.json({ code: 'OK', data: updated, message: '续费成功' });
 });
 
 // 删除学生
