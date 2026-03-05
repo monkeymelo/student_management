@@ -329,3 +329,66 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   font-size: 16px;
   font-family: inherit;
 }
+
+.master-timetable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.weekday-column {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.weekday-column h3 {
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+
+.weekday-cards {
+  display: grid;
+  gap: 10px;
+}
+
+.timetable-card {
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.timetable-time {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.timetable-count {
+  margin: 8px 0;
+  color: #334155;
+  font-size: 14px;
+}
+
+.timetable-students {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  color: #0f172a;
+}
+
+.timetable-checkin-btn {
+  width: 100%;
+  font-size: 14px;
+}
+
+.signed-today-placeholder {
+  margin: 8px 0 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #166534;
+  background: #dcfce7;
+  border: 1px dashed #86efac;
+}

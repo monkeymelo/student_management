@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const studentsRouter = require('../routes/students');
 const attendanceRouter = require('../routes/attendance');
+const timetableRouter = require('../routes/timetable');
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/students', studentsRouter);
 app.use('/api/attendance', attendanceRouter);
+app.use('/api/timetable', timetableRouter);
 
 const frontendPath = path.resolve(__dirname, '../../frontend');
 app.use(express.static(frontendPath));

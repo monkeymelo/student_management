@@ -1,5 +1,6 @@
 const listPage = document.getElementById('list-page');
 const detailPage = document.getElementById('detail-page');
+const masterTimetablePage = document.getElementById('master-timetable-page');
 const studentList = document.getElementById('student-list');
 const attendanceTbody = document.getElementById('attendance-tbody');
 const searchInput = document.getElementById('search-input');
@@ -8,6 +9,7 @@ const detailCard = document.getElementById('student-detail-card');
 const topDeleteBtn = document.getElementById('top-delete-btn');
 
 const topListBtn = document.getElementById('top-list-btn');
+const topMasterTimetableBtn = document.getElementById('top-master-timetable-btn');
 const topCreateBtn = document.getElementById('top-create-btn');
 const studentDialog = document.getElementById('student-dialog');
 const studentForm = document.getElementById('student-form');
@@ -18,6 +20,7 @@ const newCourseTypeInput = document.getElementById('new-course-type');
 const addCourseTypeBtn = document.getElementById('add-course-type-btn');
 const addScheduleBtn = document.getElementById('add-schedule-btn');
 const scheduleList = document.getElementById('schedule-list');
+const masterTimetableContainer = document.getElementById('master-timetable');
 
 const checkinDialog = document.getElementById('checkin-dialog');
 const checkinForm = document.getElementById('checkin-form');
@@ -34,6 +37,7 @@ let students = [];
 let selectedStudentId = null;
 let keyword = '';
 let editingStudentId = null;
+let masterTimetable = [];
 
 const WEEKDAY_OPTIONS = [
   { value: '1', label: '周一' },
@@ -45,6 +49,17 @@ const WEEKDAY_OPTIONS = [
   { value: '7', label: '周日' }
 ];
 
+
+const WEEKDAY_VALUES = [1, 2, 3, 4, 5, 6, 7];
+
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
 function setErrors(form, errors) {
   form.querySelectorAll('[data-error-for]').forEach((node) => {
     node.textContent = errors[node.dataset.errorFor] || '';
@@ -232,10 +247,19 @@ function renderStudents() {
   `).join('');
 }
 
+function showPage(page) {
+  [listPage, detailPage, masterTimetablePage].forEach((node) => node.classList.remove('active'));
+  page.classList.add('active');
+}
+
 function openListPage() {
-  detailPage.classList.remove('active');
-  listPage.classList.add('active');
+  showPage(listPage);
   selectedStudentId = null;
+}
+
+async function openMasterTimetablePage() {
+  showPage(masterTimetablePage);
+  await loadMasterTimetable();
 }
 
 function openStudentDialog() {
@@ -275,8 +299,7 @@ async function openDetailPage(studentId) {
   const json = await apiFetch(`/api/students/${selectedStudentId}`);
   const student = json.data;
 
-  listPage.classList.remove('active');
-  detailPage.classList.add('active');
+  showPage(detailPage);
 
   const progressPercent = student.enroll_count > 0
     ? Math.min(100, Math.round((student.attended_count / student.enroll_count) * 100))
@@ -330,6 +353,57 @@ function renderAttendances(records) {
   `).join('');
 }
 
+
+function renderMasterTimetable() {
+  if (!masterTimetable.length) {
+    masterTimetableContainer.innerHTML = '<div class="empty">暂无排课数据</div>';
+    return;
+  }
+
+  const byWeekday = new Map(WEEKDAY_VALUES.map((day) => [day, []]));
+  masterTimetable.forEach((item) => {
+    if (!byWeekday.has(Number(item.weekday))) {
+      byWeekday.set(Number(item.weekday), []);
+    }
+    byWeekday.get(Number(item.weekday)).push(item);
+  });
+
+  masterTimetableContainer.innerHTML = WEEKDAY_VALUES.map((weekday) => {
+    const cards = (byWeekday.get(weekday) || []).sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
+    return `
+      <section class="weekday-column">
+        <h3>${weekdayText(weekday)}</h3>
+        <div class="weekday-cards">
+          ${cards.length ? cards.map((card) => `
+            <article class="timetable-card">
+              <p class="timetable-time">${escapeHtml(card.time_slot)}</p>
+              <p class="timetable-count">人数：${card.student_count}</p>
+              <ul class="timetable-students">
+                ${card.students.map((student) => `<li>${escapeHtml(student.name)}</li>`).join('')}
+              </ul>
+              <button
+                type="button"
+                class="secondary timetable-checkin-btn"
+                data-slot="${card.weekday}|${escapeHtml(card.time_slot)}"
+                data-weekday="${card.weekday}"
+                data-start-time="${escapeHtml(String(card.start_time || '').slice(0, 5))}"
+                data-student-id="${card.students[0] ? card.students[0].id : ''}"
+              >去签到 / 本节点名</button>
+              <p class="signed-today-placeholder">今日已签到：待接入</p>
+            </article>
+          `).join('') : '<div class="empty">无时段</div>'}
+        </div>
+      </section>
+    `;
+  }).join('');
+}
+
+async function loadMasterTimetable() {
+  const json = await apiFetch('/api/timetable/master');
+  masterTimetable = json.data;
+  renderMasterTimetable();
+}
+
 async function loadStudents() {
   const json = await apiFetch('/api/students');
   students = json.data;
@@ -352,6 +426,7 @@ backBtn.addEventListener('click', () => openListPage());
 topCreateBtn.addEventListener('click', () => openStudentDialog());
 
 topListBtn.addEventListener('click', () => openListPage());
+topMasterTimetableBtn.addEventListener('click', async () => openMasterTimetablePage());
 
 cancelStudentBtn.addEventListener('click', () => studentDialog.close());
 addScheduleBtn.addEventListener('click', () => renderScheduleRow());
@@ -462,6 +537,27 @@ detailCard.addEventListener('click', async (event) => {
 
 });
 
+
+
+masterTimetableContainer.addEventListener('click', (event) => {
+  const checkinBtn = event.target.closest('.timetable-checkin-btn');
+  if (!checkinBtn) return;
+
+  const studentId = Number(checkinBtn.dataset.studentId);
+  if (!studentId) {
+    window.alert('当前时段暂无可签到学生');
+    return;
+  }
+
+  document.getElementById('checkin-student-id').value = String(studentId);
+  document.getElementById('checkin-date').valueAsDate = new Date();
+  document.getElementById('checkin-time').value = checkinBtn.dataset.startTime || '18:00';
+  document.getElementById('checkin-content').value = '';
+  checkinForm.dataset.slotKey = checkinBtn.dataset.slot || '';
+  setErrors(checkinForm, {});
+  document.getElementById('checkin-form-server-error').textContent = '';
+  checkinDialog.showModal();
+});
 
 attendanceTbody.addEventListener('click', async (event) => {
   const deleteBtn = event.target.closest('.attendance-delete-btn');

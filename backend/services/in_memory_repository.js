@@ -218,6 +218,46 @@ class InMemoryRepository {
     this.students.set(id, updated);
     return { ...updated };
   }
+
+  async getMasterTimetable() {
+    const grouped = new Map();
+
+    this.schedules.forEach((schedule) => {
+      const student = this.students.get(Number(schedule.student_id));
+      if (!student) return;
+
+      const timeSlot = `${String(schedule.start_time).slice(0, 5)}-${String(schedule.end_time).slice(0, 5)}`;
+      const key = `${schedule.weekday}-${timeSlot}`;
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          weekday: Number(schedule.weekday),
+          time_slot: timeSlot,
+          start_time: String(schedule.start_time).slice(0, 8),
+          end_time: String(schedule.end_time).slice(0, 8),
+          student_count: 0,
+          students: []
+        });
+      }
+
+      const bucket = grouped.get(key);
+      if (!bucket.students.some((item) => Number(item.id) === Number(student.id))) {
+        bucket.students.push({ id: student.id, name: student.name });
+        bucket.student_count += 1;
+      }
+    });
+
+    return Array.from(grouped.values())
+      .map((item) => ({
+        ...item,
+        students: item.students.sort((a, b) => String(a.name).localeCompare(String(b.name), 'zh-Hans-CN'))
+      }))
+      .sort((a, b) => {
+        if (a.weekday === b.weekday) {
+          return a.start_time.localeCompare(b.start_time);
+        }
+        return a.weekday - b.weekday;
+      });
+  }
 }
 
 module.exports = {
