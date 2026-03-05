@@ -4,10 +4,81 @@ const { repository } = require('../services/data_store');
 const router = express.Router();
 
 const ALLOWED_GENDERS = new Set(['male', 'female', 'other']);
+const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
 
 function sanitizeRemark(value) {
   if (typeof value !== 'string') return '';
   return value.trim();
+}
+
+function normalizeTime(value) {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  const match = trimmed.match(TIME_PATTERN);
+  if (!match) return null;
+  const [_, hh, mm, ss] = match;
+  return `${hh}:${mm}:${ss || '00'}`;
+}
+
+function toSeconds(time) {
+  const [hh, mm, ss] = time.split(':').map(Number);
+  return hh * 3600 + mm * 60 + ss;
+}
+
+function validateSchedules(rawSchedules) {
+  if (rawSchedules === undefined) {
+    return { valid: true, errors: {}, sanitized: undefined };
+  }
+
+  if (!Array.isArray(rawSchedules)) {
+    return { valid: false, errors: { schedules: 'schedules 必须为数组' }, sanitized: [] };
+  }
+
+  const errors = {};
+  const normalized = [];
+  const dedup = new Set();
+
+  rawSchedules.forEach((item, index) => {
+    if (!item || typeof item !== 'object') {
+      errors[`schedules[${index}]`] = '每个排课必须是对象';
+      return;
+    }
+
+    const weekday = Number(item.weekday);
+    const start = normalizeTime(item.start_time);
+    const end = normalizeTime(item.end_time);
+
+    if (!Number.isInteger(weekday) || weekday < 1 || weekday > 7) {
+      errors[`schedules[${index}].weekday`] = 'weekday 需在 1-7';
+    }
+    if (!start) {
+      errors[`schedules[${index}].start_time`] = 'start_time 格式需为 HH:mm 或 HH:mm:ss';
+    }
+    if (!end) {
+      errors[`schedules[${index}].end_time`] = 'end_time 格式需为 HH:mm 或 HH:mm:ss';
+    }
+
+    if (start && end && toSeconds(start) >= toSeconds(end)) {
+      errors[`schedules[${index}]`] = 'start_time 必须早于 end_time';
+      return;
+    }
+
+    if (Number.isInteger(weekday) && start && end) {
+      const key = `${weekday}-${start}-${end}`;
+      if (dedup.has(key)) {
+        errors[`schedules[${index}]`] = '存在重复排课';
+        return;
+      }
+      dedup.add(key);
+      normalized.push({ weekday, start_time: start, end_time: end });
+    }
+  });
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    sanitized: normalized
+  };
 }
 
 function validateStudentPayload(payload) {
@@ -45,6 +116,9 @@ function validateStudentPayload(payload) {
     errors.remark = '备注长度不能超过 500';
   }
 
+  const schedulesValidation = validateSchedules(payload.schedules);
+  Object.assign(errors, schedulesValidation.errors);
+
   return {
     valid: Object.keys(errors).length === 0,
     errors,
@@ -55,7 +129,8 @@ function validateStudentPayload(payload) {
       course_type: String(payload.course_type || '').trim(),
       enroll_count: enrollCount,
       total_amount: totalAmount,
-      remark
+      remark,
+      schedules: schedulesValidation.sanitized
     }
   };
 }
@@ -84,6 +159,11 @@ function validateRenewPayload(payload) {
   };
 }
 
+async function attachSchedules(student) {
+  const schedules = await repository.listSchedulesByStudentId(student.id);
+  return { ...student, schedules };
+}
+
 // 创建学生
 router.post('/', async (req, res) => {
   const { valid, errors, sanitized } = validateStudentPayload(req.body || {});
@@ -92,13 +172,18 @@ router.post('/', async (req, res) => {
   }
 
   const student = await repository.createStudent(sanitized);
-  return res.status(201).json({ code: 'OK', data: student });
+  if (Array.isArray(sanitized.schedules)) {
+    await repository.replaceStudentSchedules(student.id, sanitized.schedules);
+  }
+
+  return res.status(201).json({ code: 'OK', data: await attachSchedules(student) });
 });
 
 // 查询学生列表
 router.get('/', async (req, res) => {
   const students = await repository.listStudents();
-  return res.json({ code: 'OK', data: students });
+  const data = await Promise.all(students.map((student) => attachSchedules(student)));
+  return res.json({ code: 'OK', data });
 });
 
 // 查询单个学生
@@ -108,7 +193,7 @@ router.get('/:id', async (req, res) => {
     return res.status(404).json({ code: 'STUDENT_NOT_FOUND', message: '学生不存在' });
   }
 
-  return res.json({ code: 'OK', data: student });
+  return res.json({ code: 'OK', data: await attachSchedules(student) });
 });
 
 // 更新学生
@@ -123,7 +208,11 @@ router.put('/:id', async (req, res) => {
     return res.status(404).json({ code: 'STUDENT_NOT_FOUND', message: '学生不存在' });
   }
 
-  return res.json({ code: 'OK', data: student });
+  if (Array.isArray(sanitized.schedules)) {
+    await repository.replaceStudentSchedules(student.id, sanitized.schedules);
+  }
+
+  return res.json({ code: 'OK', data: await attachSchedules(student) });
 });
 
 

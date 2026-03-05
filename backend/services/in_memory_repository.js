@@ -2,8 +2,10 @@ class InMemoryRepository {
   constructor(initialData = {}) {
     this.students = new Map();
     this.attendances = [];
+    this.schedules = [];
     this.studentId = 1;
     this.attendanceId = 1;
+    this.scheduleId = 1;
     this._tx = Promise.resolve();
 
     this._bootstrap(initialData);
@@ -12,6 +14,7 @@ class InMemoryRepository {
   _bootstrap(initialData) {
     const students = initialData.students || [];
     const attendances = initialData.attendances || [];
+    const schedules = initialData.schedules || [];
 
     students.forEach((student) => {
       const id = Number(student.id) || this.studentId++;
@@ -42,6 +45,20 @@ class InMemoryRepository {
         signed_at: attendance.signed_at || new Date().toISOString()
       });
     });
+
+    schedules.forEach((schedule) => {
+      const id = Number(schedule.id) || this.scheduleId++;
+      this.scheduleId = Math.max(this.scheduleId, id + 1);
+      this.schedules.push({
+        id,
+        student_id: Number(schedule.student_id),
+        weekday: Number(schedule.weekday),
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        created_at: schedule.created_at || new Date().toISOString(),
+        updated_at: schedule.updated_at || new Date().toISOString()
+      });
+    });
   }
 
   async transaction(work) {
@@ -69,6 +86,7 @@ class InMemoryRepository {
       remaining_lessons: Number(payload.enroll_count),
       remark: typeof payload.remark === 'string' ? payload.remark : ''
     };
+    delete student.schedules;
     this.students.set(id, student);
     return { ...student };
   }
@@ -89,6 +107,7 @@ class InMemoryRepository {
       remark: typeof payload.remark === 'string' ? payload.remark : current.remark
     };
 
+    delete updated.schedules;
     this.students.set(id, updated);
     return { ...updated };
   }
@@ -98,6 +117,7 @@ class InMemoryRepository {
     const existed = this.students.delete(id);
     if (existed) {
       this.attendances = this.attendances.filter((record) => Number(record.student_id) !== id);
+      this.schedules = this.schedules.filter((record) => Number(record.student_id) !== id);
     }
     return existed;
   }
@@ -154,6 +174,38 @@ class InMemoryRepository {
         return a.class_date.localeCompare(b.class_date);
       })
       .map((record) => ({ ...record }));
+  }
+
+  async listSchedulesByStudentId(studentId) {
+    return this.schedules
+      .filter((record) => Number(record.student_id) === Number(studentId))
+      .sort((a, b) => {
+        if (a.weekday === b.weekday) {
+          return a.start_time.localeCompare(b.start_time);
+        }
+        return a.weekday - b.weekday;
+      })
+      .map((record) => ({ ...record }));
+  }
+
+  async replaceStudentSchedules(studentId, schedules = []) {
+    const id = Number(studentId);
+    this.schedules = this.schedules.filter((record) => Number(record.student_id) !== id);
+
+    const now = new Date().toISOString();
+    schedules.forEach((schedule) => {
+      this.schedules.push({
+        id: this.scheduleId++,
+        student_id: id,
+        weekday: Number(schedule.weekday),
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        created_at: now,
+        updated_at: now
+      });
+    });
+
+    return this.listSchedulesByStudentId(id);
   }
 
   async updateStudentLessonStats(studentId, nextValues) {

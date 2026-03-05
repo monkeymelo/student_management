@@ -1,17 +1,24 @@
 # API 接口说明
 
-## POST /api/attendance/check-in
+## POST /api/students
 
-学生签到，并返回前端可直接刷新展示的课时统计。
+创建学生并可同时写入排课。
 
-### 请求体
+### 请求体示例
 
 ```json
 {
-  "student_id": 1,
-  "date": "2026-01-03",
-  "time": "11:00:00",
-  "content": "视唱练耳"
+  "name": "王小明",
+  "gender": "male",
+  "age": 11,
+  "course_type": "钢琴",
+  "enroll_count": 24,
+  "total_amount": 7200,
+  "remark": "周末优先",
+  "schedules": [
+    { "weekday": 2, "start_time": "18:00", "end_time": "19:00" },
+    { "weekday": 6, "start_time": "10:00", "end_time": "11:30" }
+  ]
 }
 ```
 
@@ -20,119 +27,82 @@
 ```json
 {
   "code": "OK",
-  "message": "签到成功",
   "data": {
-    "attendance": {
-      "id": 10,
-      "student_id": 1,
-      "class_date": "2026-01-03",
-      "class_time": "11:00:00",
-      "class_content": "视唱练耳",
-      "signed_at": "2026-01-03T03:00:00.000Z"
-    },
-    "student": {
-      "id": 1,
-      "completed_lessons": 8,
-      "remaining_lessons": 4
-    }
+    "id": 3,
+    "name": "王小明",
+    "gender": "male",
+    "age": 11,
+    "course_type": "钢琴",
+    "enroll_count": 24,
+    "total_amount": 7200,
+    "attended_count": 0,
+    "remaining_lessons": 24,
+    "remark": "周末优先",
+    "schedules": [
+      {
+        "id": 1,
+        "student_id": 3,
+        "weekday": 2,
+        "start_time": "18:00:00",
+        "end_time": "19:00:00",
+        "created_at": "2026-01-03T03:00:00.000Z",
+        "updated_at": "2026-01-03T03:00:00.000Z"
+      }
+    ]
   }
 }
 ```
 
-> 前端可直接使用 `data.student.completed_lessons` 与 `data.student.remaining_lessons` 刷新“已上课次数/剩余课时”。
-
-### 失败响应：课时用尽（409）
-
-```json
-{
-  "code": "LESSONS_EXHAUSTED",
-  "message": "课时已用完，无法签到"
-}
-```
-
-
-## DELETE /api/attendance/:id
-
-删除一条签到记录，并回滚学生课时统计。
-
-### 请求路径
-
-- `/api/attendance/10`
-
-### 成功响应（200）
-
-```json
-{
-  "code": "OK",
-  "message": "删除成功",
-  "data": {
-    "attendance": {
-      "id": 10,
-      "student_id": 1,
-      "class_date": "2026-01-03",
-      "class_time": "11:00:00",
-      "class_content": "视唱练耳",
-      "signed_at": "2026-01-03T03:00:00.000Z"
-    },
-    "student": {
-      "id": 1,
-      "completed_lessons": 7,
-      "remaining_lessons": 5
-    }
-  }
-}
-```
-
-### 典型失败响应
-
-签到记录不存在（404）：
-
-```json
-{
-  "code": "ATTENDANCE_NOT_FOUND",
-  "message": "签到记录不存在"
-}
-```
-
-学生不存在（404）：
-
-```json
-{
-  "code": "STUDENT_NOT_FOUND",
-  "message": "学生不存在"
-## PUT /api/students/:id/remark
-
-仅更新学生备注，避免与基础资料更新耦合。
-
-### 请求体
-
-```json
-{
-  "remark": "家长反馈：本周希望增加节奏训练。"
-}
-```
-
-### 成功响应（200）
-
-```json
-{
-  "code": "OK",
-  "message": "备注已更新",
-  "data": {
-    "id": 1,
-    "name": "张三",
-    "remark": "家长反馈：本周希望增加节奏训练。"
-  }
-}
-```
-
-### 失败响应：参数错误（400）
+### 失败响应示例（400）
 
 ```json
 {
   "code": "VALIDATION_ERROR",
   "errors": {
-    "remark": "备注长度不能超过 500"
+    "schedules[0].weekday": "weekday 需在 1-7",
+    "schedules[1]": "start_time 必须早于 end_time",
+    "schedules[2]": "存在重复排课"
   }
 }
 ```
+
+## PUT /api/students/:id
+
+更新学生信息。传入 `schedules` 时会按“覆盖更新”处理（先删除该学生原排课，再写入新排课）。
+
+### 请求体示例
+
+```json
+{
+  "name": "王小明",
+  "gender": "male",
+  "age": 12,
+  "course_type": "钢琴",
+  "enroll_count": 30,
+  "total_amount": 9000,
+  "remark": "已调整为周中",
+  "schedules": [
+    { "weekday": 3, "start_time": "18:30", "end_time": "19:30" }
+  ]
+}
+```
+
+## GET /api/students
+
+返回学生列表，每个学生都包含 `schedules` 字段。
+
+## GET /api/students/:id
+
+返回单个学生详情，包含该学生 `schedules`，可直接用于前端详情页展示。
+
+## PUT /api/students/:id/remark
+
+仅更新学生备注，避免与基础资料更新耦合。
+
+## POST /api/attendance/check-in
+
+学生签到，并返回前端可直接刷新展示的课时统计。
+
+## DELETE /api/attendance/:id
+
+删除一条签到记录，并回滚学生课时统计。

@@ -10,6 +10,17 @@
 - `total_amount`: 总金额
 - `attended_count`: 已上课次数
 - `remaining_lessons`: 剩余课时（不可为负数）
+- `remark`: 备注
+- `schedules`: 学生固定排课数组，元素结构见 `Schedule`
+
+## Schedule
+- `id`: 排课ID
+- `student_id`: 学生ID（关联 `students.id`）
+- `weekday`: 周几（1-7，1=周一）
+- `start_time`: 开始时间（`HH:mm:ss`）
+- `end_time`: 结束时间（`HH:mm:ss`）
+- `created_at`: 创建时间戳
+- `updated_at`: 更新时间戳
 
 ## Attendance
 - `id`: 签到记录ID
