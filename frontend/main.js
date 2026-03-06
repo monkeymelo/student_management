@@ -145,14 +145,18 @@ function renderScheduleRow(schedule = {}) {
     <select class="schedule-weekday" aria-label="上课周几">
       ${WEEKDAY_OPTIONS.map((option) => `<option value="${option.value}">${option.label}</option>`).join('')}
     </select>
-    <select class="schedule-start-hour" aria-label="开始小时">${HOUR_OPTIONS_HTML}</select>
-    <span>:</span>
-    <select class="schedule-start-minute" aria-label="开始分钟">${MINUTE_OPTIONS_HTML}</select>
+    <div class="schedule-time-group">
+      <select class="schedule-start-hour" aria-label="开始小时">${HOUR_OPTIONS_HTML}</select>
+      <span class="schedule-colon">:</span>
+      <select class="schedule-start-minute" aria-label="开始分钟">${MINUTE_OPTIONS_HTML}</select>
+    </div>
     <input class="schedule-start-time" type="hidden" />
     <span class="schedule-separator">-</span>
-    <select class="schedule-end-hour" aria-label="结束小时">${HOUR_OPTIONS_HTML}</select>
-    <span>:</span>
-    <select class="schedule-end-minute" aria-label="结束分钟">${MINUTE_OPTIONS_HTML}</select>
+    <div class="schedule-time-group">
+      <select class="schedule-end-hour" aria-label="结束小时">${HOUR_OPTIONS_HTML}</select>
+      <span class="schedule-colon">:</span>
+      <select class="schedule-end-minute" aria-label="结束分钟">${MINUTE_OPTIONS_HTML}</select>
+    </div>
     <input class="schedule-end-time" type="hidden" />
     <button type="button" class="danger-ghost-btn schedule-remove-btn" aria-label="删除时段" title="删除时段">✕</button>
   `;
