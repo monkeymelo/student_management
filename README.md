@@ -6,7 +6,6 @@
 
 - `backend/`: API 服务（Express）
 - `frontend/`: 原生 HTML/CSS/JavaScript 管理端（存量版本，继续可用）
-- `frontend-react/`: 新增 React + TypeScript + Vite + Tailwind 管理端（迁移版本）
 - `docs/`: 接口与字段说明
 - `docs/api.md`: 接口请求/响应示例（含签到成功与课时用尽错误码）
 
@@ -73,24 +72,6 @@ cd backend
 npm start
 # 浏览器访问 http://localhost:3000
 ```
-
-### 新版 React 前端（新增）
-
-新版前端位于 `frontend-react/`，已完成 React + TypeScript + Vite + Tailwind 初始化，并映射关键业务能力（学生列表、学生详情、签到、续费、全局课表）。
-
-```bash
-cd frontend-react
-npm install
-npm run dev
-# 浏览器访问 Vite 输出地址（默认 http://localhost:5173）
-```
-
-## 迁移计划（frontend -> frontend-react）
-
-1. **并行运行阶段**：保留 `frontend/` 作为稳定版本，`frontend-react/` 承接新需求开发。
-2. **能力对齐阶段**：优先对齐学生管理核心流程（列表、详情、签到、续费、课表），再补齐登录、录入、批量签到等高级能力。
-3. **联调切换阶段**：将 `frontend-react/` 的 `mockApi` 逐步替换为真实后端 API，并完成回归测试。
-4. **收敛阶段**：待 React 版通过验收后，冻结 `frontend/`，最终下线或仅保留静态归档。
 
 ## 数据库表说明
 
