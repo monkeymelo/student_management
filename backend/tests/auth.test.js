@@ -76,6 +76,23 @@ test('生产环境登录 Cookie 启用 Secure', async () => {
   }
 });
 
+test('生产环境登录 Cookie 启用 Secure', async () => {
+  const srv = await startTestServer({ nodeEnv: 'production' });
+
+  try {
+    const response = await fetch(`${srv.baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'admin', password: 'yqyh8888' })
+    });
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('set-cookie'), /Secure/);
+  } finally {
+    await srv.close();
+  }
+});
+
 test('登录失败返回 401 且错误信息通用', async () => {
   const srv = await startTestServer();
 
@@ -252,4 +269,5 @@ test('缺失关键配置时启动报错', () => {
     () => createApp(),
     /Missing required environment variable: ADMIN_USERNAME\. Please set it in shell env or backend\/\.env\./
   );
+  assert.throws(() => createApp(), /Missing required environment variable: ADMIN_USERNAME/);
 });

@@ -221,8 +221,9 @@ button[disabled] {
 
 .error { color: #dc2626; min-height: 16px; margin: 0; font-size: 12px; }
 menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; margin-top: 12px; }
-dialog { border: none; border-radius: 12px; width: 420px; box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2); }
+dialog { border: none; border-radius: 12px; width: min(760px, calc(100vw - 32px)); max-width: 100%; box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2); }
 dialog form { display: flex; flex-direction: column; gap: 8px; }
+#student-dialog { width: min(860px, calc(100vw - 24px)); }
 label { display: flex; flex-direction: column; gap: 4px; }
 
 .inline-row {
@@ -287,7 +288,7 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 
 .schedule-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(150px, 1fr) auto minmax(150px, 1fr) auto;
+  grid-template-columns: minmax(88px, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
 }
@@ -295,7 +296,19 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 .schedule-row select,
 .schedule-row input[type="time"] {
   width: 100%;
-  min-width: 140px;
+}
+
+.schedule-time-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.schedule-colon {
+  color: #475569;
+  font-weight: 600;
 }
 
 .schedule-remove-btn {
@@ -315,6 +328,21 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 .schedule-separator {
   color: #64748b;
   font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .schedule-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .schedule-separator {
+    display: none;
+  }
+
+  .schedule-remove-btn {
+    justify-self: end;
+  }
 }
 
 .detail-schedules {
