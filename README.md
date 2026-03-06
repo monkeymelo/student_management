@@ -61,18 +61,6 @@ npm start
 - `GET /api/students`
 - `GET /api/attendance`
 
-## 前端启动方式
-
-### 旧版原生前端（保留）
-
-旧版前端仍位于 `frontend/`，用于保证当前上线能力和回归可用性。
-
-```bash
-cd backend
-npm start
-# 浏览器访问 http://localhost:3000
-```
-
 ## 数据库表说明
 
 建表脚本位于：`backend/migrations/001_create_students_and_attendance.sql`
