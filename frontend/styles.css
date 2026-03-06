@@ -268,7 +268,7 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   flex-direction: column;
   gap: 8px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px;
 }
 
@@ -404,7 +404,7 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   min-width: 0;
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 12px;
 }
 
@@ -421,7 +421,7 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 .timetable-card {
   border: 1px solid #dbeafe;
   background: #f8fbff;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px;
 }
 
@@ -470,7 +470,7 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 
 .batch-students-section {
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px;
 }
 
@@ -528,7 +528,12 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   --brand-strong: #ea580c;
   --danger: #dc2626;
   --border-soft: #fed7aa;
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
   --shadow-soft: 0 16px 45px rgba(249, 115, 22, 0.14);
+  --shadow-hover: 0 24px 44px rgba(249, 115, 22, 0.2);
+  --card-hover-shift: translateY(-4px);
 }
 
 body {
@@ -575,22 +580,41 @@ body {
 dialog,
 .batch-students-section,
 .batch-student-item,
-.timetable-day,
-.timetable-entry {
-  border-radius: 20px;
+.weekday-column,
+.timetable-card {
   border-color: var(--border-soft);
   background: var(--surface);
   box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card,
+.student-item,
+.login-card,
+dialog {
+  border-radius: var(--radius-xl);
+}
+
+.batch-students-section,
+.batch-student-item,
+.weekday-column,
+.timetable-card {
+  border-radius: var(--radius-lg);
 }
 
 .student-item {
   padding: 20px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.student-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px rgba(249, 115, 22, 0.2);
+.card:hover,
+.student-item:hover,
+.login-card:hover,
+.weekday-column:hover,
+.timetable-card:hover,
+.batch-students-section:hover,
+.batch-student-item:hover {
+  transform: var(--card-hover-shift);
+  box-shadow: var(--shadow-hover);
 }
 
 .name-row,
