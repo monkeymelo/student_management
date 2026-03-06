@@ -1,6 +1,7 @@
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #0f172a;
+  line-height: 1.5;
 }
 
 * { box-sizing: border-box; }
@@ -268,7 +269,7 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   flex-direction: column;
   gap: 8px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px;
 }
 
@@ -404,7 +405,7 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   min-width: 0;
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 12px;
 }
 
@@ -421,20 +422,22 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 .timetable-card {
   border: 1px solid #dbeafe;
   background: #f8fbff;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px;
 }
 
 .timetable-time {
   margin: 0;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: clamp(1rem, 1.4vw, 1.08rem);
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .timetable-count {
   margin: 8px 0;
   color: #334155;
   font-size: 14px;
+  line-height: 1.35;
 }
 
 .timetable-students {
@@ -470,7 +473,7 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 
 .batch-students-section {
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 10px;
 }
 
@@ -531,8 +534,13 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   --accent-yellow: #ffd166;
   --accent-yellow-soft: #fff4cc;
   --danger: #dc2626;
-  --border-soft: #ffd8bf;
-  --shadow-soft: 0 16px 45px rgba(255, 138, 76, 0.16);
+  --border-soft: #fed7aa;
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --shadow-soft: 0 16px 45px rgba(249, 115, 22, 0.14);
+  --shadow-hover: 0 24px 44px rgba(249, 115, 22, 0.2);
+  --card-hover-shift: translateY(-4px);
 }
 
 body {
@@ -554,9 +562,11 @@ body {
 }
 
 .topbar h1 {
-  font-size: 32px;
+  font-size: 34px;
   letter-spacing: 0.02em;
   color: #7c3f1a;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .container {
@@ -568,6 +578,8 @@ body {
 .detail-top h2 {
   color: #7c3f1a;
   font-weight: 800;
+  font-size: clamp(1.75rem, 2.2vw, 2.3rem);
+  line-height: 1.25;
 }
 
 .card,
@@ -576,22 +588,41 @@ body {
 dialog,
 .batch-students-section,
 .batch-student-item,
-.timetable-day,
-.timetable-entry {
-  border-radius: 20px;
+.weekday-column,
+.timetable-card {
   border-color: var(--border-soft);
   background: var(--surface);
   box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card,
+.student-item,
+.login-card,
+dialog {
+  border-radius: var(--radius-xl);
+}
+
+.batch-students-section,
+.batch-student-item,
+.weekday-column,
+.timetable-card {
+  border-radius: var(--radius-lg);
 }
 
 .student-item {
   padding: 20px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.student-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px rgba(255, 138, 76, 0.24);
+.card:hover,
+.student-item:hover,
+.login-card:hover,
+.weekday-column:hover,
+.timetable-card:hover,
+.batch-students-section:hover,
+.batch-student-item:hover {
+  transform: var(--card-hover-shift);
+  box-shadow: var(--shadow-hover);
 }
 
 .name-row,
@@ -599,11 +630,41 @@ dialog,
   color: #7c3f1a;
 }
 
+.name-row {
+  font-size: clamp(1.4rem, 2.4vw, 1.8rem);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.progress {
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.progress small {
+  font-size: clamp(0.82rem, 1.1vw, 0.92rem);
+  line-height: 1.35;
+  font-weight: 500;
+}
+
 .sub,
 .detail-top p,
 .week-range,
 .batch-students-section p {
   color: var(--text-secondary);
+}
+
+.sub {
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.detail-top p {
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  line-height: 1.45;
+  font-weight: 500;
 }
 
 input[type='search'],
@@ -614,6 +675,8 @@ textarea {
   border-radius: 14px;
   background: #fffaf5;
   color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 input:focus,
@@ -698,7 +761,9 @@ button:hover {
 
 th,
 td {
-  border-bottom-color: var(--border-soft);
+  border-bottom-color: #ffe4c7;
+  line-height: 1.45;
+  font-weight: 500;
 }
 
 thead th {
@@ -707,7 +772,20 @@ thead th {
   background: #fff6ea;
 }
 
+label {
+  font-weight: 500;
+}
+
 @media (max-width: 960px) {
+  .page-header h2,
+  .detail-top h2 {
+    line-height: 1.3;
+  }
+
+  .progress {
+    font-size: 1.05rem;
+  }
+
   .topbar {
     flex-direction: column;
     align-items: flex-start;
