@@ -1,8 +1,8 @@
 -- 003_create_class_sessions.sql
--- 说明：创建课堂时段会话表，同一天同一时段唯一，防止重复签到
+-- 说明：创建课堂时段会话表，同一天同一时段唯一，防止重复签到（PostgreSQL）
 
 CREATE TABLE IF NOT EXISTS class_sessions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id BIGSERIAL PRIMARY KEY,
   session_date DATE NOT NULL,
   weekday INTEGER NOT NULL CHECK (weekday BETWEEN 1 AND 7),
   start_time TIME NOT NULL,

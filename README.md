@@ -4,7 +4,7 @@
 
 ## 项目结构
 
-- `backend/`: API 服务（Express）
+- `backend/`: API 服务（Express + PostgreSQL）
 - `frontend/`: 原生 HTML/CSS/JavaScript 管理端（存量版本，继续可用）
 - `docs/`: 接口与字段说明
 - `docs/api.md`: 接口请求/响应示例（含签到成功与课时用尽错误码）
@@ -14,11 +14,14 @@
 后端服务支持以下环境变量：
 
 - `PORT`: 服务端口（默认 `3000`）
+- `DATABASE_URL`: PostgreSQL 连接字符串（必填）
 - `ADMIN_USERNAME`: 管理员登录用户名（必填）
 - `ADMIN_PASSWORD_HASH`: 管理员密码的 bcrypt 哈希（必填，不可存明文）
 - `SESSION_SECRET`: 会话签名密钥（必填）
 - `MAX_LOGIN_ATTEMPTS`: 登录失败阈值，超过后短时锁定（可选，默认 `5`）
 - `LOGIN_LOCKOUT_MS`: 触发锁定后的持续毫秒数（可选，默认 `300000`）
+
+> 如果未配置 `DATABASE_URL`，服务启动时会报错：`Missing required environment variable: DATABASE_URL...`
 
 ### 生成 `ADMIN_PASSWORD_HASH`
 
@@ -30,8 +33,6 @@ python3 -c "import crypt,sys; print(crypt.crypt(sys.argv[1], crypt.mksalt(crypt.
 
 将输出值填入 `ADMIN_PASSWORD_HASH`。
 
-> 数据库连接变量（如 `DATABASE_URL`）可在接入 ORM 或 DB 客户端后补充。
-
 ## 本地启动（后端）
 
 推荐方式：使用 `backend/.env`（可由 `backend/.env.example` 复制）。
@@ -39,8 +40,9 @@ python3 -c "import crypt,sys; print(crypt.crypt(sys.argv[1], crypt.mksalt(crypt.
 ```bash
 cd backend
 cp .env.example .env
-# 修改 .env 中的 ADMIN_PASSWORD_HASH 和 SESSION_SECRET
+# 修改 .env 中的 DATABASE_URL、ADMIN_PASSWORD_HASH、SESSION_SECRET
 npm install
+npm run migrate
 npm start
 ```
 
@@ -49,9 +51,11 @@ npm start
 ```bash
 cd backend
 npm install
+export DATABASE_URL='postgresql://user:password@host:5432/dbname?sslmode=require'
 export ADMIN_USERNAME='admin'
 export ADMIN_PASSWORD_HASH='替换为bcrypt哈希'
 export SESSION_SECRET='请设置为随机长字符串'
+npm run migrate
 npm start
 ```
 
@@ -60,6 +64,36 @@ npm start
 - `GET /health`
 - `GET /api/students`
 - `GET /api/attendance`
+
+## 运行数据库 migration
+
+项目 migration 文件位于 `backend/migrations/`：
+
+- `001_create_students_and_attendance.sql`
+- `002_create_student_schedules.sql`
+- `003_create_class_sessions.sql`
+
+执行方式：
+
+```bash
+cd backend
+DATABASE_URL='你的连接串' npm run migrate
+```
+
+## Render 部署说明
+
+1. 在 Render 创建 **Web Service**，选择本仓库。
+2. Root Directory 设为 `backend`。
+3. Build Command：`npm install`
+4. Start Command：`npm start`
+5. 在 Render 控制台添加环境变量：
+   - `DATABASE_URL`（建议关联 Render PostgreSQL 实例）
+   - `ADMIN_USERNAME`
+   - `ADMIN_PASSWORD_HASH`
+   - `SESSION_SECRET`
+   - （可选）`MAX_LOGIN_ATTEMPTS`、`LOGIN_LOCKOUT_MS`
+6. 首次部署前，在 Render Shell 或本地对 Render 数据库执行：`npm run migrate`。
+7. 服务会自动使用 `process.env.PORT` 启动，兼容 Render 端口注入。
 
 ## 数据库表说明
 
@@ -85,7 +119,6 @@ npm start
 
 - `backend/routes/students.js`：学生 CRUD
 - `backend/routes/attendance.js`：签到 CRUD 与签到接口（`POST /check-in`）
-
 
 ## 常见启动报错
 

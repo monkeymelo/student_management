@@ -7,8 +7,10 @@ const { createAuthRouter } = require('../routes/auth');
 const { requireAuth } = require('../middleware/auth');
 const { createSessionMiddleware } = require('../middleware/session');
 const { loadAuthConfig } = require('./config/auth');
+const { ensureDatabaseConfigured } = require('./db');
 
 function createApp(config = loadAuthConfig()) {
+  ensureDatabaseConfigured();
   const app = express();
   app.use(express.json());
 
