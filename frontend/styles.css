@@ -467,3 +467,22 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
   border-radius: 8px;
   background: #f8fafc;
 }
+
+.login-card {
+  max-width: 420px;
+  margin: 40px auto;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.login-card h2 {
+  margin-top: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
