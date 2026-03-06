@@ -76,6 +76,23 @@ test('生产环境登录 Cookie 启用 Secure', async () => {
   }
 });
 
+test('生产环境登录 Cookie 启用 Secure', async () => {
+  const srv = await startTestServer({ nodeEnv: 'production' });
+
+  try {
+    const response = await fetch(`${srv.baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'admin', password: 'yqyh8888' })
+    });
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('set-cookie'), /Secure/);
+  } finally {
+    await srv.close();
+  }
+});
+
 test('登录失败返回 401 且错误信息通用', async () => {
   const srv = await startTestServer();
 
@@ -199,10 +216,58 @@ test('登出后会话失效', async () => {
   }
 });
 
+
+test('支持从 .env 文件加载鉴权配置', async () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auth-env-'));
+  const envPath = path.join(tempDir, '.env');
+  const password = 'from-env-file';
+  const hash = makeBcryptHash(password);
+
+  fs.writeFileSync(envPath, [
+    'ADMIN_USERNAME=admin',
+    `ADMIN_PASSWORD_HASH=${hash}`,
+    'SESSION_SECRET=env-secret'
+  ].join('\n'));
+
+  delete process.env.ADMIN_USERNAME;
+  delete process.env.ADMIN_PASSWORD_HASH;
+  delete process.env.SESSION_SECRET;
+  process.env.AUTH_ENV_FILE = envPath;
+
+  const app = createApp();
+  const server = await new Promise((resolve) => {
+    const next = app.listen(0, () => resolve(next));
+  });
+
+  const port = server.address().port;
+  const baseUrl = `http://127.0.0.1:${port}`;
+
+  try {
+    const response = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'admin', password })
+    });
+
+    assert.equal(response.status, 200);
+  } finally {
+    delete process.env.AUTH_ENV_FILE;
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('缺失关键配置时启动报错', () => {
   delete process.env.ADMIN_USERNAME;
   delete process.env.ADMIN_PASSWORD_HASH;
   delete process.env.SESSION_SECRET;
 
+  assert.throws(
+    () => createApp(),
+    /Missing required environment variable: ADMIN_USERNAME\. Please set it in shell env or backend\/\.env\./
+  );
   assert.throws(() => createApp(), /Missing required environment variable: ADMIN_USERNAME/);
 });

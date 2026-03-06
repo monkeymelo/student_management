@@ -34,6 +34,18 @@ python3 -c "import crypt,sys; print(crypt.crypt(sys.argv[1], crypt.mksalt(crypt.
 
 ## 本地启动（后端）
 
+推荐方式：使用 `backend/.env`（可由 `backend/.env.example` 复制）。
+
+```bash
+cd backend
+cp .env.example .env
+# 修改 .env 中的 ADMIN_PASSWORD_HASH 和 SESSION_SECRET
+npm install
+npm start
+```
+
+也可以用 shell 环境变量方式启动：
+
 ```bash
 cd backend
 npm install
@@ -73,3 +85,14 @@ npm start
 
 - `backend/routes/students.js`：学生 CRUD
 - `backend/routes/attendance.js`：签到 CRUD 与签到接口（`POST /check-in`）
+
+
+## 常见启动报错
+
+如果看到：`Missing required environment variable: ADMIN_USERNAME`，说明后端没有读到鉴权配置。
+
+请检查：
+
+1. 是否在 `backend/.env` 中配置了 `ADMIN_USERNAME`、`ADMIN_PASSWORD_HASH`、`SESSION_SECRET`；
+2. 或者是否在当前 shell 中 `export` 了上述变量；
+3. 若你把 env 文件放在其他位置，可设置 `AUTH_ENV_FILE=/path/to/.env` 后再启动。
