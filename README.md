@@ -14,14 +14,44 @@
 后端服务支持以下环境变量：
 
 - `PORT`: 服务端口（默认 `3000`）
+- `ADMIN_USERNAME`: 管理员登录用户名（必填）
+- `ADMIN_PASSWORD_HASH`: 管理员密码的 bcrypt 哈希（必填，不可存明文）
+- `SESSION_SECRET`: 会话签名密钥（必填）
+- `MAX_LOGIN_ATTEMPTS`: 登录失败阈值，超过后短时锁定（可选，默认 `5`）
+- `LOGIN_LOCKOUT_MS`: 触发锁定后的持续毫秒数（可选，默认 `300000`）
+
+### 生成 `ADMIN_PASSWORD_HASH`
+
+在 `backend` 目录执行以下命令生成 bcrypt 哈希：
+
+```bash
+python3 -c "import crypt,sys; print(crypt.crypt(sys.argv[1], crypt.mksalt(crypt.METHOD_BLOWFISH)))" '你的明文密码'
+```
+
+将输出值填入 `ADMIN_PASSWORD_HASH`。
 
 > 数据库连接变量（如 `DATABASE_URL`）可在接入 ORM 或 DB 客户端后补充。
 
 ## 本地启动（后端）
 
+推荐方式：使用 `backend/.env`（可由 `backend/.env.example` 复制）。
+
+```bash
+cd backend
+cp .env.example .env
+# 修改 .env 中的 ADMIN_PASSWORD_HASH 和 SESSION_SECRET
+npm install
+npm start
+```
+
+也可以用 shell 环境变量方式启动：
+
 ```bash
 cd backend
 npm install
+export ADMIN_USERNAME='admin'
+export ADMIN_PASSWORD_HASH='替换为bcrypt哈希'
+export SESSION_SECRET='请设置为随机长字符串'
 npm start
 ```
 
@@ -55,3 +85,14 @@ npm start
 
 - `backend/routes/students.js`：学生 CRUD
 - `backend/routes/attendance.js`：签到 CRUD 与签到接口（`POST /check-in`）
+
+
+## 常见启动报错
+
+如果看到：`Missing required environment variable: ADMIN_USERNAME`，说明后端没有读到鉴权配置。
+
+请检查：
+
+1. 是否在 `backend/.env` 中配置了 `ADMIN_USERNAME`、`ADMIN_PASSWORD_HASH`、`SESSION_SECRET`；
+2. 或者是否在当前 shell 中 `export` 了上述变量；
+3. 若你把 env 文件放在其他位置，可设置 `AUTH_ENV_FILE=/path/to/.env` 后再启动。
