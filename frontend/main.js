@@ -1,5 +1,6 @@
 import { WEEKDAY_VALUES, getDateByWeekday, getResetWeekStartForToday, getWeekRangeText, getWeekStartForToday, getWeekStartMonday, getWeekdayHeaderText, formatDateIso } from './week_utils.mjs';
 
+const loginPage = document.getElementById('login-page');
 const listPage = document.getElementById('list-page');
 const detailPage = document.getElementById('detail-page');
 const masterTimetablePage = document.getElementById('master-timetable-page');
@@ -13,6 +14,8 @@ const topDeleteBtn = document.getElementById('top-delete-btn');
 const topListBtn = document.getElementById('top-list-btn');
 const topMasterTimetableBtn = document.getElementById('top-master-timetable-btn');
 const topCreateBtn = document.getElementById('top-create-btn');
+const topLogoutBtn = document.getElementById('top-logout-btn');
+const loginForm = document.getElementById('login-form');
 const studentDialog = document.getElementById('student-dialog');
 const studentForm = document.getElementById('student-form');
 const cancelStudentBtn = document.getElementById('cancel-student-btn');
@@ -50,6 +53,7 @@ let selectedStudentId = null;
 let keyword = '';
 let editingStudentId = null;
 let masterTimetable = [];
+let isAuthenticated = false;
 
 const WEEKDAY_OPTIONS = [
   { value: '1', label: '周一' },
@@ -275,12 +279,38 @@ function validateRenewForm(data) {
   return errors;
 }
 
+function setAuthenticatedState(nextState) {
+  isAuthenticated = nextState;
+  topListBtn.disabled = !nextState;
+  topMasterTimetableBtn.disabled = !nextState;
+  topCreateBtn.disabled = !nextState;
+  topLogoutBtn.hidden = !nextState;
+}
+
+function resetToLoginView() {
+  setAuthenticatedState(false);
+  selectedStudentId = null;
+  showPage(loginPage);
+}
+
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
     ...options
   });
-  const json = await response.json();
+
+  let json = {};
+  try {
+    json = await response.json();
+  } catch (error) {
+    json = { message: '服务器返回异常' };
+  }
+
+  if (response.status === 401) {
+    resetToLoginView();
+    throw json;
+  }
+
   if (!response.ok) throw json;
   return json;
 }
@@ -312,7 +342,7 @@ function renderStudents() {
 }
 
 function showPage(page) {
-  [listPage, detailPage, masterTimetablePage].forEach((node) => node.classList.remove('active'));
+  [loginPage, listPage, detailPage, masterTimetablePage].forEach((node) => node.classList.remove('active'));
   page.classList.add('active');
 }
 
@@ -500,6 +530,30 @@ async function openBatchCheckinDialog({ weekday, startTime, endTime, sessionDate
   batchCheckinDialog.showModal();
 }
 
+async function checkAuthStatus() {
+  const json = await apiFetch('/api/auth/me');
+  const authenticated = Boolean(json?.data?.authenticated);
+  setAuthenticatedState(authenticated);
+  return authenticated;
+}
+
+async function login(username, password) {
+  const json = await apiFetch('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password })
+  });
+  setAuthenticatedState(true);
+  return json;
+}
+
+async function logout() {
+  try {
+    await apiFetch('/api/auth/logout', { method: 'POST' });
+  } finally {
+    resetToLoginView();
+  }
+}
+
 async function loadMasterTimetable() {
   const weekStart = formatDateIso(currentWeekStart);
   const json = await apiFetch(`/api/timetable/master?week_start=${weekStart}`);
@@ -591,6 +645,23 @@ checkinMinuteSelect?.addEventListener('change', syncCheckinTimeValue);
 cancelBatchCheckinBtn.addEventListener('click', () => batchCheckinDialog.close());
 cancelRenewBtn.addEventListener('click', () => renewDialog.close());
 cancelRemarkBtn.addEventListener('click', () => remarkDialog.close());
+
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const formData = Object.fromEntries(new FormData(loginForm).entries());
+  document.getElementById('login-error').textContent = '';
+
+  try {
+    await login(String(formData.username || '').trim(), String(formData.password || ''));
+    loginForm.reset();
+    await loadStudents();
+    openListPage();
+  } catch (error) {
+    document.getElementById('login-error').textContent = error.message || '登录失败';
+  }
+});
+
+topLogoutBtn.addEventListener('click', async () => logout());
 
 studentForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -813,7 +884,22 @@ renewForm.addEventListener('submit', async (event) => {
   }
 });
 
-loadStudents();
+async function initApp() {
+  try {
+    const authenticated = await checkAuthStatus();
+    if (!authenticated) {
+      resetToLoginView();
+      return;
+    }
+
+    await loadStudents();
+    openListPage();
+  } catch (error) {
+    resetToLoginView();
+  }
+}
+
+initApp();
 
 
 remarkForm.addEventListener('submit', async (event) => {

@@ -13,11 +13,28 @@
         <button id="top-list-btn" type="button" class="secondary icon-btn"><span class="icon" aria-hidden="true">👥</span>学生列表</button>
         <button id="top-master-timetable-btn" type="button" class="secondary icon-btn"><span class="icon" aria-hidden="true">🗓️</span>全局课表</button>
         <button id="top-create-btn" type="button" class="secondary icon-btn"><span class="icon" aria-hidden="true">⊕</span>录入学生</button>
+        <button id="top-logout-btn" type="button" class="secondary icon-btn"><span class="icon" aria-hidden="true">↩</span>退出登录</button>
       </div>
     </header>
 
     <main class="container">
-      <section id="list-page" class="page active">
+      <section id="login-page" class="page">
+        <div class="login-card">
+          <h2>管理员登录</h2>
+          <form id="login-form" class="login-form">
+            <label>账号
+              <input id="login-username" name="username" autocomplete="username" required />
+            </label>
+            <label>密码
+              <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+            </label>
+            <p id="login-error" class="error"></p>
+            <button type="submit">登录</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="list-page" class="page">
         <div class="page-header">
           <h2>学生列表</h2>
           <div class="actions">
