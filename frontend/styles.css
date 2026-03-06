@@ -520,15 +520,19 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 
 /* ===== UI Revamp: modern warm card design for kids training studio ===== */
 :root {
-  --bg-start: #fff7ee;
-  --bg-end: #ffefe1;
+  --bg-start: #fff9f0;
+  --bg-end: #fff3e4;
   --surface: rgba(255, 255, 255, 0.88);
   --surface-strong: #ffffff;
   --text-primary: #6f3d22;
   --text-secondary: #9b6241;
-  --brand: #f97316;
-  --brand-soft: #ffedd5;
-  --brand-strong: #ea580c;
+  --brand: #ff8a4c;
+  --brand-soft: #ffe6d6;
+  --brand-strong: #e66d2d;
+  --accent-cyan: #4ecdc4;
+  --accent-cyan-soft: #dcf7f5;
+  --accent-yellow: #ffd166;
+  --accent-yellow-soft: #fff4cc;
   --danger: #dc2626;
   --border-soft: #fed7aa;
   --radius-xl: 32px;
@@ -541,23 +545,20 @@ th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font
 
 body {
   color: var(--text-primary);
-  background:
-    radial-gradient(circle at 5% 8%, rgba(253, 186, 116, 0.28), transparent 42%),
-    radial-gradient(circle at 95% 10%, rgba(251, 191, 36, 0.2), transparent 40%),
-    linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+  background: #fff9f0;
 }
 
 .topbar {
   position: sticky;
   top: 0;
   z-index: 10;
-  border: 1px solid #ffe0bf;
+  border: 1px solid var(--border-soft);
   border-radius: 0 0 24px 24px;
   margin: 0 10px;
   margin-top: 8px;
   padding: 18px 24px;
-  background: linear-gradient(120deg, #fff6ea 0%, #ffedd9 50%, #ffe9d2 100%);
-  box-shadow: 0 14px 30px rgba(246, 141, 69, 0.16);
+  background: linear-gradient(120deg, #fffaf4 0%, #ffefdf 50%, #ffe8d5 100%);
+  box-shadow: 0 14px 30px rgba(255, 138, 76, 0.2);
 }
 
 .topbar h1 {
@@ -670,7 +671,7 @@ input[type='search'],
 input,
 select,
 textarea {
-  border: 1px solid #fdba74;
+  border: 1px solid var(--border-soft);
   border-radius: 14px;
   background: #fffaf5;
   color: var(--text-primary);
@@ -681,7 +682,7 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid rgba(249, 115, 22, 0.25);
+  outline: 2px solid rgba(255, 138, 76, 0.28);
   outline-offset: 1px;
 }
 
@@ -689,12 +690,12 @@ button {
   border: none;
   border-radius: 14px;
   font-weight: 600;
-  background: linear-gradient(120deg, #fb923c 0%, #f97316 100%);
-  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.24);
+  background: linear-gradient(120deg, var(--brand) 0%, var(--brand-strong) 100%);
+  box-shadow: 0 10px 24px rgba(255, 138, 76, 0.28);
 }
 
 button.secondary {
-  border: 1px solid #fdba74;
+  border: 1px solid var(--border-soft);
   color: #9a4f24;
   background: #fff7ef;
   box-shadow: none;
@@ -711,26 +712,51 @@ button:hover {
 }
 
 .link-btn {
-  color: #b45309;
-  background: #fff7ed;
-  border: 1px solid #fdba74;
+  color: var(--brand-strong);
+  background: var(--brand-soft);
+  border: 1px solid var(--border-soft);
 }
 
 .detail-grid {
-  border-top-color: #ffe4c7;
+  border-top-color: var(--border-soft);
 }
 
 .detail-grid p {
-  border-bottom-color: #ffe4c7;
+  border-bottom-color: var(--border-soft);
 }
 
 .detail-progress-track {
   height: 12px;
-  background: #ffedd5;
+  background: var(--brand-soft);
 }
 
 .detail-progress-fill {
-  background: linear-gradient(120deg, #f97316 0%, #fb923c 100%);
+  background: linear-gradient(120deg, var(--brand) 0%, var(--brand-strong) 100%);
+}
+
+.schedule-tag {
+  color: #11635e;
+  background: var(--accent-cyan-soft);
+  border-color: rgba(78, 205, 196, 0.45);
+}
+
+.timetable-card {
+  border-color: rgba(78, 205, 196, 0.38);
+  background: linear-gradient(180deg, #f7fffe 0%, #f2fffd 100%);
+}
+
+.timetable-time {
+  color: #12726c;
+}
+
+.timetable-checkin-btn {
+  border: 1px solid rgba(78, 205, 196, 0.35);
+}
+
+.timetable-checkin-btn.is-checked-in {
+  border-color: rgba(255, 209, 102, 0.58);
+  background: var(--accent-yellow-soft);
+  color: #8b5a00;
 }
 
 th,
