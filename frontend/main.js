@@ -454,6 +454,11 @@ function renderAttendances(records) {
 
 function renderMasterTimetable() {
   masterWeekRange.textContent = getWeekRangeText(currentWeekStart);
+  const today = new Date();
+  const todayIso = formatDateIso(today);
+  const currentWeekStartIso = formatDateIso(currentWeekStart);
+  const todayWeekStartIso = formatDateIso(getWeekStartMonday(today));
+  const todayWeekday = currentWeekStartIso === todayWeekStartIso ? (today.getDay() || 7) : null;
 
   if (!masterTimetable.length) {
     masterTimetableContainer.innerHTML = '<div class="empty">暂无排课数据</div>';
@@ -471,9 +476,13 @@ function renderMasterTimetable() {
   masterTimetableContainer.innerHTML = WEEKDAY_VALUES.map((weekday) => {
     const cards = (byWeekday.get(weekday) || []).sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
     const sessionDate = getDateByWeekday(currentWeekStart, weekday);
+    const isToday = weekday === todayWeekday && sessionDate === todayIso;
     return `
-      <section class="weekday-column">
-        <h3>${getWeekdayHeaderText(currentWeekStart, weekday, weekdayText(weekday))}</h3>
+      <section class="weekday-column ${isToday ? 'is-today' : ''}">
+        <h3>
+          ${getWeekdayHeaderText(currentWeekStart, weekday, weekdayText(weekday))}
+          ${isToday ? '<span class="today-badge">今天</span>' : ''}
+        </h3>
         <div class="weekday-cards">
           ${cards.length ? cards.map((card) => `
             <article class="timetable-card">
