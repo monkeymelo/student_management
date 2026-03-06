@@ -1,9 +1,9 @@
 -- 002_create_student_schedules.sql
--- 说明：创建学生排课表，支持按学生维护固定上课时段
+-- 说明：创建学生排课表，支持按学生维护固定上课时段（PostgreSQL）
 
 CREATE TABLE IF NOT EXISTS student_schedules (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  student_id INTEGER NOT NULL,
+  id BIGSERIAL PRIMARY KEY,
+  student_id BIGINT NOT NULL,
   weekday INTEGER NOT NULL CHECK (weekday BETWEEN 1 AND 7),
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
