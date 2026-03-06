@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test",
-    "migrate": "node scripts/run_migrations.js"
+    "migrate": "node scripts/run_migrations.js",
+    "import:students": "node scripts/import_students.js"
   },
   "dependencies": {
     "express": "^4.19.2",
