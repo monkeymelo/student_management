@@ -5,7 +5,7 @@
 ## 项目结构
 
 - `backend/`: API 服务（Express）
-- `frontend/`: 管理端页面（预留）
+- `frontend/`: 原生 HTML/CSS/JavaScript 管理端（存量版本，继续可用）
 - `docs/`: 接口与字段说明
 - `docs/api.md`: 接口请求/响应示例（含签到成功与课时用尽错误码）
 
