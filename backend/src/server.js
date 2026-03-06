@@ -3,21 +3,25 @@ const path = require('path');
 const studentsRouter = require('../routes/students');
 const attendanceRouter = require('../routes/attendance');
 const timetableRouter = require('../routes/timetable');
-const authRouter = require('../routes/auth');
+const { createAuthRouter } = require('../routes/auth');
 const { requireAuth } = require('../middleware/auth');
 const { createSessionMiddleware } = require('../middleware/session');
+const { loadAuthConfig } = require('./config/auth');
 
-function createApp() {
+function createApp(config = loadAuthConfig()) {
   const app = express();
   app.use(express.json());
 
-  app.use(createSessionMiddleware());
+  app.use(createSessionMiddleware({
+    sessionSecret: config.sessionSecret,
+    isProduction: config.isProduction
+  }));
 
   app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
   });
 
-  app.use('/api/auth', authRouter);
+  app.use('/api/auth', createAuthRouter(config));
   app.use('/api', requireAuth);
   app.use('/api/students', studentsRouter);
   app.use('/api/attendance', attendanceRouter);

@@ -16,9 +16,21 @@ function parseCookies(cookieHeader = '') {
     }, {});
 }
 
-function serializeCookie(name, value, { maxAge = ONE_DAY_MS, httpOnly = true, path = '/', sameSite = 'Lax' } = {}) {
-  const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${path}`, `Max-Age=${Math.floor(maxAge / 1000)}`, `SameSite=${sameSite}`];
+function serializeCookie(name, value, {
+  maxAge = ONE_DAY_MS,
+  httpOnly = true,
+  path = '/',
+  sameSite = 'Lax',
+  secure = false
+} = {}) {
+  const parts = [
+    `${name}=${encodeURIComponent(value)}`,
+    `Path=${path}`,
+    `Max-Age=${Math.floor(maxAge / 1000)}`,
+    `SameSite=${sameSite}`
+  ];
   if (httpOnly) parts.push('HttpOnly');
+  if (secure) parts.push('Secure');
   return parts.join('; ');
 }
 
@@ -51,13 +63,18 @@ function fromCookieSessionValue(value, secret) {
   return sessionId;
 }
 
-function createSessionMiddleware() {
-  const secret = process.env.SESSION_SECRET || 'student-management-session-secret';
+function createSessionMiddleware({ sessionSecret, isProduction }) {
+  const cookieOptions = {
+    httpOnly: true,
+    sameSite: 'Lax',
+    secure: Boolean(isProduction),
+    path: '/'
+  };
 
   return (req, res, next) => {
     const cookies = parseCookies(req.headers.cookie);
     const rawSession = cookies[SESSION_COOKIE_NAME];
-    const sessionIdFromCookie = fromCookieSessionValue(rawSession, secret);
+    const sessionIdFromCookie = fromCookieSessionValue(rawSession, sessionSecret);
     const current = sessionIdFromCookie && sessionStore.get(sessionIdFromCookie);
 
     req.sessionID = current ? sessionIdFromCookie : null;
@@ -69,7 +86,7 @@ function createSessionMiddleware() {
       }
       req.sessionID = null;
       req.session = {};
-      res.setHeader('Set-Cookie', serializeCookie(SESSION_COOKIE_NAME, '', { maxAge: 0 }));
+      res.setHeader('Set-Cookie', serializeCookie(SESSION_COOKIE_NAME, '', { ...cookieOptions, maxAge: 0 }));
       if (callback) callback(null);
     };
 
@@ -82,7 +99,7 @@ function createSessionMiddleware() {
         delete sessionData.destroy;
         sessionStore.set(nextSid, sessionData);
         req.sessionID = nextSid;
-        res.setHeader('Set-Cookie', serializeCookie(SESSION_COOKIE_NAME, toCookieSessionValue(nextSid, secret)));
+        res.setHeader('Set-Cookie', serializeCookie(SESSION_COOKIE_NAME, toCookieSessionValue(nextSid, sessionSecret), cookieOptions));
       }
       return originalJson(body);
     };
