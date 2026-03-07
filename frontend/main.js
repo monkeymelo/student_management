@@ -404,6 +404,7 @@ async function openDetailPage(studentId) {
   const student = json.data;
 
   showPage(detailPage);
+  window.scrollTo({ top: 0, behavior: 'auto' });
 
   const progressPercent = student.enroll_count > 0
     ? Math.min(100, Math.round((student.attended_count / student.enroll_count) * 100))
