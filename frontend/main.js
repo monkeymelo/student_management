@@ -54,6 +54,8 @@ let keyword = '';
 let editingStudentId = null;
 let masterTimetable = [];
 let isAuthenticated = false;
+let listPageScrollY = 0;
+let shouldRestoreListScroll = false;
 
 const WEEKDAY_OPTIONS = [
   { value: '1', label: '周一' },
@@ -359,6 +361,16 @@ function showPage(page) {
 function openListPage() {
   showPage(listPage);
   selectedStudentId = null;
+
+  if (shouldRestoreListScroll) {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: listPageScrollY, behavior: 'auto' });
+    });
+    shouldRestoreListScroll = false;
+    return;
+  }
+
+  window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
 async function openMasterTimetablePage() {
@@ -399,6 +411,9 @@ function openEditStudentDialog(student) {
 }
 
 async function openDetailPage(studentId) {
+  listPageScrollY = window.scrollY;
+  shouldRestoreListScroll = true;
+
   selectedStudentId = Number(studentId);
   const json = await apiFetch(`/api/students/${selectedStudentId}`);
   const student = json.data;
