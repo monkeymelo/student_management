@@ -339,11 +339,11 @@ function renderStudents() {
 
   studentList.innerHTML = filtered.map((student) => `
     <button type="button" class="student-item" data-id="${student.id}">
-      <div>
+      <div class="student-main">
         <p class="name-row">${escapeHtml(student.name)} <span class="meta-muted"><span class="gender-accent ${genderClass(student.gender)}">${genderText(student.gender)}</span> · ${student.age}岁</span></p>
         <p class="sub"><span class="course-tag">${escapeHtml(student.course_type)}</span></p>
       </div>
-      <div class="progress">
+      <div class="progress student-progress">
         <div>课程进度：剩余 <span class="remaining-lessons ${student.remaining_lessons <= 5 ? 'danger' : 'safe'}">${student.remaining_lessons}</span>/${student.enroll_count}</div>
         <small>已上：${student.attended_count}节</small>
       </div>
@@ -413,8 +413,7 @@ async function openDetailPage(studentId) {
     <div class="detail-top">
       <div>
         <h2>${student.name}</h2>
-        <p class="meta-muted"><span class="gender-accent ${genderClass(student.gender)}">${genderText(student.gender)}</span> · ${student.age}岁</p>
-        <p><span class="course-tag">${escapeHtml(student.course_type)}</span></p>
+        <p class="detail-meta-row meta-muted"><span class="detail-meta-text"><span class="gender-accent ${genderClass(student.gender)}">${genderText(student.gender)}</span> · ${student.age}岁</span><span class="course-tag detail-course-tag">${escapeHtml(student.course_type)}</span></p>
       </div>
       <div class="detail-actions">
         <button type="button" id="detail-renew-btn">续费</button>
