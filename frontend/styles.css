@@ -56,8 +56,23 @@ body {
 
 .topbar h1 {
   margin: 0;
-  font-size: clamp(1.5rem, 2.4vw, 2.4rem);
-  color: var(--text-primary);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1.05;
+}
+
+.brand-title {
+  color: #4A90E2;
+  font-size: clamp(1.9rem, 2.8vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.system-title {
+  color: #94A3B8;
+  font-size: clamp(1.2rem, 1.8vw, 1.7rem);
+  font-weight: 500;
 }
 
 .topbar-actions {
@@ -209,15 +224,56 @@ button[disabled] {
 .name-row span {
   margin-left: 8px;
   font-size: 18px;
-  color: var(--text-secondary);
+  color: #A7B3C5;
 }
 
 .sub { margin: 0; color: var(--text-secondary); font-size: 18px; }
 
 .progress { color: var(--text-primary); font-size: 18px; text-align: right; }
 .progress small { color: var(--text-secondary); font-size: 13px; display: block; margin-top: 4px; }
-.safe { color: #6f9ad5; }
-.danger { color: #d16d8e; }
+
+.meta-muted {
+  color: #A7B3C5;
+}
+
+.detail-top p.meta-muted {
+  color: #A7B3C5;
+}
+
+.course-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #F4F8FB;
+  color: #4A90E2;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.gender-accent {
+  font-weight: 700;
+}
+
+.gender-female {
+  color: #F9C5D1;
+}
+
+.gender-male {
+  color: #A3C4F3;
+}
+
+.gender-other {
+  color: #B8C0CC;
+}
+
+.remaining-lessons {
+  font-weight: 800;
+}
+
+.safe { color: #4A90E2; }
+.danger { color: #FF6B6B; }
 
 .card,
 .login-card,

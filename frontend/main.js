@@ -88,6 +88,12 @@ function genderText(gender) {
   return '其他';
 }
 
+function genderClass(gender) {
+  if (gender === 'male') return 'gender-male';
+  if (gender === 'female') return 'gender-female';
+  return 'gender-other';
+}
+
 function weekdayText(weekday) {
   const found = WEEKDAY_OPTIONS.find((option) => Number(option.value) === Number(weekday));
   return found ? found.label : '未知';
@@ -334,11 +340,11 @@ function renderStudents() {
   studentList.innerHTML = filtered.map((student) => `
     <button type="button" class="student-item" data-id="${student.id}">
       <div>
-        <p class="name-row">${student.name} <span>${genderText(student.gender)} · ${student.age}岁</span></p>
-        <p class="sub">${student.course_type}</p>
+        <p class="name-row">${escapeHtml(student.name)} <span class="meta-muted"><span class="gender-accent ${genderClass(student.gender)}">${genderText(student.gender)}</span> · ${student.age}岁</span></p>
+        <p class="sub"><span class="course-tag">${escapeHtml(student.course_type)}</span></p>
       </div>
       <div class="progress">
-        <div>课程进度：剩余 <span class="${student.remaining_lessons < 5 ? 'danger' : 'safe'}">${student.remaining_lessons}</span>/${student.enroll_count}</div>
+        <div>课程进度：剩余 <span class="remaining-lessons ${student.remaining_lessons <= 5 ? 'danger' : 'safe'}">${student.remaining_lessons}</span>/${student.enroll_count}</div>
         <small>已上：${student.attended_count}节</small>
       </div>
     </button>
@@ -407,8 +413,8 @@ async function openDetailPage(studentId) {
     <div class="detail-top">
       <div>
         <h2>${student.name}</h2>
-        <p>${genderText(student.gender)} · ${student.age}岁</p>
-        <p>${student.course_type}</p>
+        <p class="meta-muted"><span class="gender-accent ${genderClass(student.gender)}">${genderText(student.gender)}</span> · ${student.age}岁</p>
+        <p><span class="course-tag">${escapeHtml(student.course_type)}</span></p>
       </div>
       <div class="detail-actions">
         <button type="button" id="detail-renew-btn">续费</button>
@@ -493,7 +499,7 @@ function renderMasterTimetable() {
               </ul>
               <button
                 type="button"
-                class="secondary timetable-checkin-btn ${card.has_session ? 'is-checked-in' : ''}"
+                class="timetable-checkin-btn ${card.has_session ? 'is-checked-in' : ''}"
                 data-weekday="${card.weekday}"
                 data-start-time="${escapeHtml(String(card.start_time || '').slice(0, 5))}"
                 data-end-time="${escapeHtml(String(card.end_time || '').slice(0, 5))}"
