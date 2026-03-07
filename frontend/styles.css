@@ -215,6 +215,21 @@ button[disabled] {
   background: var(--hover-blue);
 }
 
+
+.student-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.student-progress {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+}
+
 .name-row {
   margin: 0 0 8px;
   font-size: clamp(1.3rem, 1.8vw, 1.7rem);
@@ -223,8 +238,8 @@ button[disabled] {
 
 .name-row span {
   margin-left: 8px;
-  font-size: 18px;
-  color: #A7B3C5;
+  font-size: 16px;
+  color: #B8C3D3;
 }
 
 .sub { margin: 0; color: var(--text-secondary); font-size: 18px; }
@@ -233,11 +248,11 @@ button[disabled] {
 .progress small { color: var(--text-secondary); font-size: 13px; display: block; margin-top: 4px; }
 
 .meta-muted {
-  color: #A7B3C5;
+  color: #B8C3D3;
 }
 
 .detail-top p.meta-muted {
-  color: #A7B3C5;
+  color: #B8C3D3;
 }
 
 .course-tag {
@@ -345,6 +360,24 @@ dialog,
 
 .detail-top h2 { margin: 0; font-size: clamp(1.8rem, 2.6vw, 2.5rem); }
 .detail-top p { margin: 8px 0 0; color: var(--text-secondary); font-size: 18px; }
+
+.detail-meta-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.detail-meta-text {
+  display: inline-flex;
+  align-items: center;
+}
+
+.detail-meta-row .detail-course-tag {
+  transform: translateY(-1px);
+  margin-left: 2px;
+}
 
 .detail-grid {
   margin-top: 16px;
@@ -729,6 +762,10 @@ thead th { background: var(--hover-blue); }
 
   .progress {
     text-align: left;
+  }
+
+  .student-progress {
+    align-items: flex-start;
   }
 
   .master-timetable-grid {
