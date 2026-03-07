@@ -242,8 +242,16 @@ button[disabled] {
   color: #B8C3D3;
 }
 
-.name-row span.gender-accent {
-  color: inherit;
+.name-row span.gender-accent.gender-female {
+  color: #F9C5D1;
+}
+
+.name-row span.gender-accent.gender-male {
+  color: #A3C4F3;
+}
+
+.name-row span.gender-accent.gender-other {
+  color: #B8C0CC;
 }
 
 .sub { margin: 0; color: var(--text-secondary); font-size: 18px; }
